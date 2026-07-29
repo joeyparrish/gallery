@@ -2,8 +2,6 @@
 // and drive a hash-routed detail viewer. The plate number (manifest position)
 // is the shareable id, so #3 always resolves even when images repeat.
 
-const GRID_GAP = 28;
-
 const grid = document.getElementById('grid');
 const viewer = document.getElementById('viewer');
 const viewerImg = viewer.querySelector('.viewer__img');
@@ -53,14 +51,20 @@ function render() {
   const width = grid.clientWidth;
   if (!width || state.items.length === 0) return;
 
-  const targetHeight = width < 640 ? 240 : width < 1024 ? 300 : 340;
-  const rows = layoutRows(state.items, width, targetHeight, GRID_GAP);
+  const small = width < 640;
+  const mid = width >= 640 && width < 1024;
+  const targetHeight = small ? 240 : mid ? 300 : 340;
+  const colGap = small ? 20 : mid ? 36 : 52;
+  const rowGap = small ? 48 : mid ? 76 : 104;
 
+  const rows = layoutRows(state.items, width, targetHeight, colGap);
+
+  grid.style.rowGap = `${rowGap}px`;
   grid.textContent = '';
   for (const row of rows) {
     const rowEl = document.createElement('div');
     rowEl.className = 'grid__row';
-    rowEl.style.gap = `${GRID_GAP}px`;
+    rowEl.style.gap = `${colGap}px`;
     for (const cell of row) {
       rowEl.appendChild(tile(cell.item, cell.width, cell.height));
     }

@@ -12,7 +12,7 @@ import path from 'node:path';
 import yaml from 'js-yaml';
 
 import { parseManifest, formatDate } from './manifest.js';
-import { generateThumbnail } from './thumbnails.js';
+import { renderWebp } from './thumbnails.js';
 
 const ROOT = path.resolve(import.meta.dirname, '..');
 const IMAGES_DIR = path.join(ROOT, 'images');
@@ -22,10 +22,19 @@ const MANIFEST_FILE = path.join(ROOT, 'gallery.yaml');
 
 const STATIC_FILES = ['index.html', 'style.css', 'app.js'];
 
-// A stable, url-safe base for a generated thumbnail filename.
-function thumbBase(file, index) {
-  const stem = file.replace(/\.[^.]+$/, '').replace(/[^a-z0-9]+/gi, '-').toLowerCase();
-  return `${String(index).padStart(3, '0')}-${stem}.webp`;
+// Full-size detail image: near-lossless, capped for safety (originals are
+// expected to be <= 2k). Thumbnail: light, for the grid.
+const FULL = { maxEdge: 2560, quality: 90 };
+const THUMB = { maxEdge: 900, quality: 80 };
+
+// A stable, url-safe basename (no extension) for an entry's generated assets.
+function assetBase(file, index) {
+  const stem = file
+    .replace(/\.[^.]+$/, '')
+    .replace(/[^a-z0-9]+/gi, '-')
+    .replace(/^-+|-+$/g, '')
+    .toLowerCase();
+  return `${String(index).padStart(3, '0')}-${stem}`;
 }
 
 async function fileExists(p) {
@@ -59,7 +68,7 @@ async function build() {
 
   // Fresh output tree.
   await fs.rm(DIST_DIR, { recursive: true, force: true });
-  await fs.mkdir(path.join(DIST_DIR, 'images'), { recursive: true });
+  await fs.mkdir(path.join(DIST_DIR, 'full'), { recursive: true });
   await fs.mkdir(path.join(DIST_DIR, 'thumbs'), { recursive: true });
 
   // Static shell.
@@ -67,7 +76,6 @@ async function build() {
     await fs.copyFile(path.join(SRC_DIR, name), path.join(DIST_DIR, name));
   }
 
-  const copiedOriginals = new Set();
   const manifest = [];
 
   for (let i = 0; i < entries.length; i++) {
@@ -81,25 +89,17 @@ async function build() {
       );
     }
 
-    // Copy each distinct original once (entries may reuse a file).
-    if (!copiedOriginals.has(entry.file)) {
-      await fs.copyFile(source, path.join(DIST_DIR, 'images', entry.file));
-      copiedOriginals.add(entry.file);
-    }
-
-    const thumbName = thumbBase(entry.file, index);
-    const { width, height } = await generateThumbnail(
-      source,
-      path.join(DIST_DIR, 'thumbs', thumbName),
-    );
+    const name = `${assetBase(entry.file, index)}.webp`;
+    const { width, height } = await renderWebp(source, path.join(DIST_DIR, 'full', name), FULL);
+    await renderWebp(source, path.join(DIST_DIR, 'thumbs', name), THUMB);
 
     manifest.push({
       index,
       title: entry.title,
       date: formatDate(entry.date),
       attribution: entry.attribution,
-      full: `images/${entry.file}`,
-      thumb: `thumbs/${thumbName}`,
+      full: `full/${name}`,
+      thumb: `thumbs/${name}`,
       width,
       height,
     });
@@ -110,9 +110,7 @@ async function build() {
     JSON.stringify(manifest, null, 2),
   );
 
-  console.log(
-    `Built ${manifest.length} entries (${copiedOriginals.size} source images) -> dist/`,
-  );
+  console.log(`Built ${manifest.length} entries -> dist/`);
 }
 
 build().catch((err) => {
