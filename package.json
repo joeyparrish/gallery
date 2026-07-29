@@ -1,0 +1,15 @@
+{
+  "name": "gallery",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Static image gallery generated from gallery.yaml and images/.",
+  "scripts": {
+    "build": "node build/index.js",
+    "test": "node --test"
+  },
+  "dependencies": {
+    "js-yaml": "^4.1.0",
+    "sharp": "^0.33.5"
+  }
+}

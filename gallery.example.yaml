@@ -1,0 +1,18 @@
+# Example manifest. Copy this to gallery.yaml, then replace these entries with
+# your own. gallery.yaml is the source of truth for what appears and in what
+# order; images in images/ that are not listed simply don't appear yet.
+#
+# Each entry:
+#   file:        required. Filename inside images/.
+#   title:       required.
+#   date:        required. YYYY, YYYY-MM, or YYYY-MM-DD.
+#   attribution: optional. A single free-text line (generator, editing app, etc.).
+
+- file: example-one.jpg
+  title: First Work
+  date: 2026-05-14
+  attribution: Midjourney v6, edited in Photoshop
+
+- file: example-two.jpg
+  title: Second Work
+  date: 2026-04

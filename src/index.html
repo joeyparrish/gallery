@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Gallery</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Spectral:ital,wght@0,300;0,400;0,500;1,300;1,400&display=swap">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <h1 class="sr-only">Gallery</h1>
+
+  <main id="grid" class="grid" aria-label="Works"></main>
+
+  <footer class="site-footer">© 2026 Joey Parrish</footer>
+
+  <div id="viewer" class="viewer" hidden role="dialog" aria-modal="true" aria-label="Work detail">
+    <button class="viewer__btn viewer__close" type="button" data-close aria-label="Close">✕</button>
+    <button class="viewer__btn viewer__nav viewer__nav--prev" type="button" data-prev aria-label="Previous work">‹</button>
+    <button class="viewer__btn viewer__nav viewer__nav--next" type="button" data-next aria-label="Next work">›</button>
+    <figure class="viewer__figure">
+      <img class="viewer__img" alt="">
+      <figcaption class="viewer__caption">
+        <h2 class="viewer__title"></h2>
+        <p class="viewer__date"></p>
+        <p class="viewer__attribution"></p>
+      </figcaption>
+    </figure>
+  </div>
+
+  <script src="app.js" type="module"></script>
+</body>
+</html>

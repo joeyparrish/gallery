@@ -1,0 +1,335 @@
+/* Gallery — a lit dark wall.
+   Serif titles, monospace records, works mounted as numbered plates on a
+   subtly top-lit, textured near-black ground. */
+
+:root {
+  /* Ground, derived from palette.png (charcoal -> deep navy). */
+  --ink: #05090e;
+  --ink-2: #0a141f;
+
+  /* Slate structure and hairlines. */
+  --slate: #223440;
+  --line: rgba(126, 156, 182, 0.14);
+  --line-strong: rgba(150, 184, 214, 0.34);
+
+  /* The one accent: the palette's muted blue, lifted for visibility. */
+  --azure: #3b5c93;
+
+  /* Text: warm off-white title, cool secondary, quiet tertiary. */
+  --paper: #e9e7e1;
+  --muted: #94a2ae;
+  --faint: #66747f;
+
+  --gap: 28px;
+  --page-pad: clamp(24px, 5vw, 76px);
+  --max-width: 1360px;
+
+  --ease: cubic-bezier(0.2, 0.6, 0.2, 1);
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background-color: var(--ink);
+  /* Gallery light: a faint cool wash from the top, deepening to near-black. */
+  background-image:
+    radial-gradient(120% 80% at 50% -20%, rgba(59, 92, 147, 0.16), transparent 60%),
+    linear-gradient(180deg, var(--ink-2), var(--ink) 55%);
+  background-attachment: fixed;
+  color: var(--paper);
+  font-family: 'Spectral', Georgia, 'Times New Roman', serif;
+  font-size: 16px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Grain: a fixed, low-opacity noise field that gives the wall some tooth. */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.045;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+body > * {
+  position: relative;
+  z-index: 1;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  border: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* ---- Index grid (justified rows built by app.js) ---------------------- */
+
+.grid {
+  max-width: var(--max-width);
+  margin: 0 auto;
+  padding: clamp(48px, 8vw, 104px) var(--page-pad) 0;
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--gap) + 24px);
+}
+
+.grid__row {
+  display: flex;
+}
+
+.tile {
+  display: flex;
+  flex-direction: column;
+  text-decoration: none;
+  color: inherit;
+  min-width: 0;
+}
+
+.tile__frame {
+  position: relative;
+  overflow: hidden;
+  background: var(--ink-2);
+  box-shadow:
+    0 1px 0 0 var(--line) inset,
+    0 18px 40px -24px rgba(0, 0, 0, 0.9);
+  transition: box-shadow 180ms var(--ease);
+}
+
+.tile__frame::after {
+  /* Hairline frame that brightens on hover. */
+  content: '';
+  position: absolute;
+  inset: 0;
+  box-shadow: 0 0 0 1px var(--line) inset;
+  transition: box-shadow 180ms var(--ease);
+  pointer-events: none;
+}
+
+.tile__img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: brightness(0.96);
+  transition: filter 180ms var(--ease);
+}
+
+.tile:hover .tile__img,
+.tile:focus-visible .tile__img {
+  filter: brightness(1.05);
+}
+
+.tile:hover .tile__frame::after,
+.tile:focus-visible .tile__frame::after {
+  box-shadow: 0 0 0 1px var(--line-strong) inset;
+}
+
+.tile:focus-visible {
+  outline: none;
+}
+
+.tile:focus-visible .tile__frame {
+  box-shadow:
+    0 1px 0 0 var(--line) inset,
+    0 18px 40px -24px rgba(0, 0, 0, 0.9),
+    0 0 0 2px var(--azure);
+}
+
+.tile__caption {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+  margin-top: 14px;
+}
+
+.tile__title {
+  font-size: 1.02rem;
+  font-weight: 400;
+  letter-spacing: 0.01em;
+  color: var(--paper);
+  min-width: 0;
+}
+
+.tile__plate {
+  flex: none;
+  font-family: 'IBM Plex Mono', ui-monospace, monospace;
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  color: var(--faint);
+}
+
+/* ---- Footer ----------------------------------------------------------- */
+
+.site-footer {
+  max-width: var(--max-width);
+  margin: clamp(80px, 12vw, 160px) auto 0;
+  padding: 28px var(--page-pad) clamp(40px, 6vw, 72px);
+  border-top: 1px solid var(--line);
+  font-family: 'IBM Plex Mono', ui-monospace, monospace;
+  font-size: 0.72rem;
+  letter-spacing: 0.1em;
+  color: var(--faint);
+  text-align: center;
+}
+
+/* ---- Detail viewer ---------------------------------------------------- */
+
+.viewer {
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: clamp(20px, 5vw, 64px);
+  background: rgba(3, 6, 11, 0.94);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+}
+
+.viewer[hidden] {
+  display: none;
+}
+
+.viewer__figure {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: clamp(20px, 3vw, 34px);
+  max-width: 100%;
+  max-height: 100%;
+}
+
+.viewer__img {
+  max-width: min(100%, 1400px);
+  max-height: 78vh;
+  object-fit: contain;
+  box-shadow: 0 40px 90px -40px rgba(0, 0, 0, 0.95);
+}
+
+.viewer__caption {
+  text-align: center;
+  max-width: 62ch;
+}
+
+.viewer__title {
+  margin: 0;
+  font-size: clamp(1.5rem, 3.4vw, 2.1rem);
+  font-weight: 400;
+  letter-spacing: 0.01em;
+  color: var(--paper);
+}
+
+.viewer__date {
+  margin: 12px 0 0;
+  font-family: 'IBM Plex Mono', ui-monospace, monospace;
+  font-size: 0.76rem;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  color: var(--muted);
+}
+
+.viewer__attribution {
+  margin: 14px 0 0;
+  font-style: italic;
+  font-weight: 300;
+  font-size: 0.9rem;
+  color: var(--faint);
+}
+
+.viewer__attribution:empty {
+  display: none;
+}
+
+/* Austere controls: hairline glyphs that surface on hover/focus. */
+.viewer__btn {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: 0;
+  color: var(--muted);
+  cursor: pointer;
+  opacity: 0.55;
+  transition: opacity 160ms var(--ease), color 160ms var(--ease);
+  -webkit-tap-highlight-color: transparent;
+}
+
+.viewer__btn:hover {
+  opacity: 1;
+  color: var(--paper);
+}
+
+.viewer__btn:focus-visible {
+  outline: 2px solid var(--azure);
+  outline-offset: 4px;
+  opacity: 1;
+}
+
+.viewer__close {
+  top: clamp(14px, 3vw, 28px);
+  right: clamp(14px, 3vw, 28px);
+  width: 44px;
+  height: 44px;
+  font-size: 1.1rem;
+}
+
+.viewer__nav {
+  top: 50%;
+  transform: translateY(-50%);
+  width: 56px;
+  height: 56px;
+  font-size: 2rem;
+  line-height: 1;
+}
+
+.viewer__nav--prev {
+  left: clamp(6px, 2vw, 24px);
+}
+
+.viewer__nav--next {
+  right: clamp(6px, 2vw, 24px);
+}
+
+body.viewer-open {
+  overflow: hidden;
+}
+
+/* ---- Loading / error state ------------------------------------------- */
+
+.grid__message {
+  font-family: 'IBM Plex Mono', ui-monospace, monospace;
+  font-size: 0.8rem;
+  letter-spacing: 0.08em;
+  color: var(--faint);
+  padding: 40px 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition-duration: 0.01ms !important;
+  }
+}
