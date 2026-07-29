@@ -54,8 +54,8 @@ function render() {
   const small = width < 640;
   const mid = width >= 640 && width < 1024;
   const targetHeight = small ? 240 : mid ? 300 : 340;
-  const colGap = small ? 20 : mid ? 36 : 52;
-  const rowGap = small ? 48 : mid ? 76 : 104;
+  const colGap = small ? 64 : mid ? 132 : 220;
+  const rowGap = small ? 64 : mid ? 132 : 220;
 
   const rows = layoutRows(state.items, width, targetHeight, colGap);
 
