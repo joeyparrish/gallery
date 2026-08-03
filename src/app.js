@@ -124,13 +124,15 @@ function work(item, width, align) {
 
   const frame = document.createElement('div');
   frame.className = 'work__frame';
-  frame.style.aspectRatio = `${item.width} / ${item.height}`;
   // Scale the gilt molding proportionally to this image's height.
   const frameHeight = (width * item.height) / item.width;
   frame.style.setProperty('--frame', (FRAME_HEIGHT_FRACTION * frameHeight / FRAME_TOP_SLICE).toFixed(4));
 
   const img = document.createElement('img');
   img.className = 'work__img';
+  // Aspect ratio on the image (not the bordered frame) reserves space without
+  // the gilt border throwing off the ratio and cropping via object-fit.
+  img.style.aspectRatio = `${item.width} / ${item.height}`;
   img.src = encodeURI(item.thumb);
   img.alt = item.title;
   img.loading = 'lazy';
