@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
-import { parseEntry, parseManifest, formatDate } from '../build/manifest.js';
+import { parseEntry, parseManifest, formatDate, slugify } from '../build/manifest.js';
 
 test('parseEntry accepts a full valid entry', () => {
   const out = parseEntry(
@@ -74,4 +74,26 @@ test('formatDate renders each granularity', () => {
   assert.equal(formatDate('2026-03'), 'March 2026');
   assert.equal(formatDate('2026-03-14'), 'March 14, 2026');
   assert.equal(formatDate('2026-01-01'), 'January 1, 2026');
+});
+
+test('slugify lowercases and hyphenates a title', () => {
+  assert.equal(slugify('Four More Years'), 'four-more-years');
+  assert.equal(slugify('I Would Eat It With A Goat'), 'i-would-eat-it-with-a-goat');
+});
+
+test('slugify collapses punctuation and trims stray hyphens', () => {
+  assert.equal(slugify('  Red Dunes!!  '), 'red-dunes');
+  assert.equal(slugify('Study #7: Dawn'), 'study-7-dawn');
+});
+
+test('slugify strips accents', () => {
+  assert.equal(slugify('Café Déjà Vu'), 'cafe-deja-vu');
+});
+
+test('slugify returns empty for a title with no alphanumerics', () => {
+  assert.equal(slugify('—'), '');
+});
+
+test('identical titles slugify identically (duplicates)', () => {
+  assert.equal(slugify('Four More Years'), slugify('Four More Years'));
 });

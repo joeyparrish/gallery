@@ -118,7 +118,7 @@ function pickAlign(index, prev) {
 function work(item, width, align) {
   const link = document.createElement('a');
   link.className = 'work';
-  link.href = `#${item.index}`;
+  link.href = `#${item.slug}`;
   link.style.width = `${width}px`;
   link.style.alignSelf = align;
 
@@ -144,11 +144,7 @@ function work(item, width, align) {
   title.className = 'tile__title';
   title.textContent = item.title;
 
-  const plate = document.createElement('span');
-  plate.className = 'tile__plate';
-  plate.textContent = String(item.index).padStart(2, '0');
-
-  caption.append(title, plate);
+  caption.append(title);
   link.append(frame, caption);
   return link;
 }
@@ -158,7 +154,7 @@ function work(item, width, align) {
 function indexFromHash() {
   const raw = decodeURIComponent(location.hash.slice(1));
   if (!raw) return -1;
-  return state.items.findIndex((it) => String(it.index) === raw);
+  return state.items.findIndex((it) => it.slug === raw);
 }
 
 function onHashChange() {
@@ -213,7 +209,7 @@ function step(delta) {
   if (state.current === -1) return;
   const count = state.items.length;
   const nextIdx = (state.current + delta + count) % count;
-  location.hash = String(state.items[nextIdx].index);
+  location.hash = state.items[nextIdx].slug;
 }
 
 function onKeydown(e) {

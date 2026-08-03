@@ -76,3 +76,16 @@ export function formatDate(date) {
   if (monthName) return `${monthName} ${year}`;
   return year;
 }
+
+// A URL-safe slug from a title, used as the deep-link hash (e.g. #four-more-years).
+// Strips accents, lowercases, and collapses runs of non-alphanumerics to a single
+// hyphen. Returns '' for a title with no alphanumerics; the caller supplies a
+// fallback. Titles that are identical produce identical slugs (duplicates).
+export function slugify(title) {
+  return String(title)
+    .normalize('NFKD')
+    .replace(/[̀-ͯ]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+}

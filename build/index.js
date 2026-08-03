@@ -11,7 +11,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import yaml from 'js-yaml';
 
-import { parseManifest, formatDate } from './manifest.js';
+import { parseManifest, formatDate, slugify } from './manifest.js';
 import { renderWebp } from './thumbnails.js';
 
 const ROOT = path.resolve(import.meta.dirname, '..');
@@ -97,6 +97,7 @@ async function build() {
 
     manifest.push({
       index,
+      slug: slugify(entry.title) || `work-${index}`,
       title: entry.title,
       date: formatDate(entry.date),
       attribution: entry.attribution,
