@@ -114,14 +114,14 @@ body > * {
      slice and the border-width both use four values (top right bottom left),
      kept in the same ratio so the corner flourishes don't distort. --frame is
      set per work by app.js so the molding scales with each image; the value
-     here is only a fallback. Edges are stretched to keep each rail's single
-     center ornament intact. */
+     here is only a fallback. Edges are repeated (round), because stretching
+     looks bad. */
   --frame: 0.24;
   border-style: solid;
   border-width:
     calc(190px * var(--frame)) calc(148px * var(--frame))
     calc(143px * var(--frame)) calc(158px * var(--frame));
-  border-image: url("frame.webp") 190 148 143 158 stretch;
+  border-image: url("frame.webp") 190 148 143 158 round;
   box-shadow:
     inset 0 0 10px rgba(0, 0, 0, 0.45),
     0 30px 70px -34px rgba(0, 0, 0, 0.95);
