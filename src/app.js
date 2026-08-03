@@ -142,7 +142,7 @@ function work(item, width, align) {
 
   const title = document.createElement('span');
   title.className = 'tile__title';
-  title.textContent = item.title;
+  title.textContent = `"${item.title}"`;
 
   caption.append(title);
   link.append(frame, caption);
@@ -174,7 +174,7 @@ function open(idx) {
 
   viewerImg.src = encodeURI(item.full);
   viewerImg.alt = item.title;
-  viewerTitle.textContent = item.title;
+  viewerTitle.textContent = `"${item.title}"`;
   viewerDate.textContent = item.date;
   viewerAttribution.textContent = item.attribution || '';
 
