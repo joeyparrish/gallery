@@ -20,12 +20,14 @@ const SRC_DIR = path.join(ROOT, 'src');
 const DIST_DIR = path.join(ROOT, 'dist');
 const MANIFEST_FILE = path.join(ROOT, 'gallery.yaml');
 
-const STATIC_FILES = ['index.html', 'style.css', 'app.js'];
+// frame.png is the untouched high-res source; frame.webp (half-scale, lossy) is
+// what ships. Keep the .png out of this list so the 3.8 MB original never deploys.
+const STATIC_FILES = ['index.html', 'style.css', 'app.js', 'frame.webp'];
 
 // Full-size detail image: near-lossless, capped for safety (originals are
 // expected to be <= 2k). Thumbnail: light, for the grid.
 const FULL = { maxEdge: 2560, quality: 90 };
-const THUMB = { maxEdge: 900, quality: 80 };
+const THUMB = { maxEdge: 1600, quality: 82 };
 
 // A stable, url-safe basename (no extension) for an entry's generated assets.
 function assetBase(file, index) {

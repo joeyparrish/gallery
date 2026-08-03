@@ -97,35 +97,38 @@ body > * {
   display: flex;
 }
 
-.tile {
+.work {
   display: flex;
   flex-direction: column;
   text-decoration: none;
   color: inherit;
-  min-width: 0;
+  max-width: 100%;
 }
 
-.tile__frame {
+.work__frame {
   position: relative;
   overflow: hidden;
   background: var(--ink-2);
+  /* Ornate gilt frame (frame.webp, half-scale of the source PNG). Uneven
+     9-slice: the picture opening sits at a different inset on each side, so the
+     slice and the border-width both use four values (top right bottom left),
+     kept in the same ratio so the corner flourishes don't distort. --frame is
+     set per work by app.js so the molding scales with each image; the value
+     here is only a fallback. Edges are stretched to keep each rail's single
+     center ornament intact. */
+  --frame: 0.24;
+  border-style: solid;
+  border-width:
+    calc(190px * var(--frame)) calc(148px * var(--frame))
+    calc(143px * var(--frame)) calc(158px * var(--frame));
+  border-image: url("frame.webp") 190 148 143 158 stretch;
   box-shadow:
-    0 1px 0 0 var(--line) inset,
-    0 18px 40px -24px rgba(0, 0, 0, 0.9);
+    inset 0 0 10px rgba(0, 0, 0, 0.45),
+    0 30px 70px -34px rgba(0, 0, 0, 0.95);
   transition: box-shadow 180ms var(--ease);
 }
 
-.tile__frame::after {
-  /* Hairline frame that brightens on hover. */
-  content: '';
-  position: absolute;
-  inset: 0;
-  box-shadow: 0 0 0 1px var(--line) inset;
-  transition: box-shadow 180ms var(--ease);
-  pointer-events: none;
-}
-
-.tile__img {
+.work__img {
   display: block;
   width: 100%;
   height: 100%;
@@ -134,24 +137,19 @@ body > * {
   transition: filter 180ms var(--ease);
 }
 
-.tile:hover .tile__img,
-.tile:focus-visible .tile__img {
+.work:hover .work__img,
+.work:focus-visible .work__img {
   filter: brightness(1.05);
 }
 
-.tile:hover .tile__frame::after,
-.tile:focus-visible .tile__frame::after {
-  box-shadow: 0 0 0 1px var(--line-strong) inset;
-}
-
-.tile:focus-visible {
+.work:focus-visible {
   outline: none;
 }
 
-.tile:focus-visible .tile__frame {
+.work:focus-visible .work__frame {
   box-shadow:
-    0 1px 0 0 var(--line) inset,
-    0 18px 40px -24px rgba(0, 0, 0, 0.9),
+    inset 0 0 10px rgba(0, 0, 0, 0.45),
+    0 30px 70px -34px rgba(0, 0, 0, 0.95),
     0 0 0 2px var(--azure);
 }
 

@@ -9,6 +9,12 @@ const viewerTitle = viewer.querySelector('.viewer__title');
 const viewerDate = viewer.querySelector('.viewer__date');
 const viewerAttribution = viewer.querySelector('.viewer__attribution');
 
+// Gilt frame scaling. FRAME_TOP_SLICE must match the top border-image-slice in
+// style.css; the frame's top molding renders at FRAME_HEIGHT_FRACTION of each
+// image's height, so every framed work looks proportionally the same.
+const FRAME_TOP_SLICE = 190;
+const FRAME_HEIGHT_FRACTION = 0.108;
+
 const state = {
   items: [],
   current: -1,
@@ -45,83 +51,86 @@ async function init() {
   onHashChange(); // honor a deep link on load
 }
 
-// ---- Justified-rows layout ---------------------------------------------
+// ---- Asymmetric procession layout --------------------------------------
 
 function render() {
   const width = grid.clientWidth;
   if (!width || state.items.length === 0) return;
 
   const small = width < 640;
-  const mid = width >= 640 && width < 1024;
-  const targetHeight = small ? 240 : mid ? 300 : 340;
-  const colGap = small ? 64 : mid ? 132 : 220;
-  const rowGap = small ? 64 : mid ? 132 : 220;
+  const vGap = small ? 144 : width < 1024 ? 220 : 300;
+  const svh = svh100(); // 100svh in px; stable when the URL bar toggles
 
-  const rows = layoutRows(state.items, width, targetHeight, colGap);
-
-  grid.style.rowGap = `${rowGap}px`;
+  grid.style.gap = `${vGap}px`;
   grid.textContent = '';
-  for (const row of rows) {
-    const rowEl = document.createElement('div');
-    rowEl.className = 'grid__row';
-    rowEl.style.gap = `${colGap}px`;
-    for (const cell of row) {
-      rowEl.appendChild(tile(cell.item, cell.width, cell.height));
+
+  let prevAlign = '';
+  for (const item of state.items) {
+    const ar = item.width / item.height;
+    let h = heightTier(item.index) * svh; // capped at 33svh by the tiers
+    let w = h * ar;
+    if (w > width) {
+      w = width; // a wide work can't exceed the column
+      h = w / ar;
     }
-    grid.appendChild(rowEl);
+    const align = small ? 'center' : pickAlign(item.index, prevAlign);
+    if (!small) prevAlign = align;
+    grid.appendChild(work(item, Math.round(w), align));
   }
 }
 
-// Group items into rows, scaling each row to fill the container width. The last
-// row keeps the target height (left-aligned) rather than stretching.
-function layoutRows(items, containerWidth, targetHeight, gap) {
-  const rows = [];
-  let row = [];
-  let arSum = 0;
-
-  const flush = (isLast) => {
-    const gaps = gap * (row.length - 1);
-    const naturalWidth = arSum * targetHeight + gaps;
-    let height;
-    if (isLast && naturalWidth <= containerWidth) {
-      height = targetHeight;
-    } else {
-      height = (containerWidth - gaps) / arSum;
-    }
-    rows.push(
-      row.map((item) => ({
-        item,
-        width: (item.width / item.height) * height,
-        height,
-      })),
-    );
-    row = [];
-    arSum = 0;
-  };
-
-  for (const item of items) {
-    row.push(item);
-    arSum += item.width / item.height;
-    const rowWidth = arSum * targetHeight + gap * (row.length - 1);
-    if (rowWidth >= containerWidth) flush(false);
-  }
-  if (row.length) flush(true);
-
-  return rows;
+// 100svh in pixels, measured via a probe so it reflects the small viewport
+// height (URL bar visible) and does NOT shift as the mobile URL bar shows or
+// hides. Falls back to innerHeight where svh is unsupported.
+function svh100() {
+  const probe = document.createElement('div');
+  probe.style.cssText =
+    'position:fixed;top:0;left:0;width:0;height:100svh;visibility:hidden;pointer-events:none';
+  document.body.appendChild(probe);
+  const h = probe.getBoundingClientRect().height;
+  probe.remove();
+  return h > 0 ? h : window.innerHeight;
 }
 
-function tile(item, width, height) {
+// Deterministic pseudo-random in [0, 1) from an integer seed, so each work's
+// size and placement stay put across reloads and resizes. `salt` distinguishes
+// the independent draws we take per work.
+function rand01(seed, salt) {
+  const x = Math.sin(seed * 12.9898 + salt * 78.233) * 43758.5453;
+  return x - Math.floor(x);
+}
+
+// A work's height as a fraction of the viewport, capped at 33svh: a few
+// discrete sizes so the procession has large and small moments.
+function heightTier(index) {
+  const tiers = [0.33, 0.413, 0.5];
+  return tiers[Math.floor(rand01(index, 5) * tiers.length)];
+}
+
+// Left / center / right placement, never repeating the previous work's, so the
+// column reads as a composed walk rather than a straight stack.
+function pickAlign(index, prev) {
+  const options = ['flex-start', 'center', 'flex-end'];
+  const pick = options[Math.floor(rand01(index, 9) * options.length)];
+  return pick === prev ? options[(options.indexOf(pick) + 1) % options.length] : pick;
+}
+
+function work(item, width, align) {
   const link = document.createElement('a');
-  link.className = 'tile';
+  link.className = 'work';
   link.href = `#${item.index}`;
   link.style.width = `${width}px`;
+  link.style.alignSelf = align;
 
   const frame = document.createElement('div');
-  frame.className = 'tile__frame';
-  frame.style.height = `${height}px`;
+  frame.className = 'work__frame';
+  frame.style.aspectRatio = `${item.width} / ${item.height}`;
+  // Scale the gilt molding proportionally to this image's height.
+  const frameHeight = (width * item.height) / item.width;
+  frame.style.setProperty('--frame', (FRAME_HEIGHT_FRACTION * frameHeight / FRAME_TOP_SLICE).toFixed(4));
 
   const img = document.createElement('img');
-  img.className = 'tile__img';
+  img.className = 'work__img';
   img.src = encodeURI(item.thumb);
   img.alt = item.title;
   img.loading = 'lazy';
