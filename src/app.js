@@ -104,7 +104,7 @@ function rand01(seed, salt) {
 // discrete sizes so the procession has large and small moments.
 function heightTier(index) {
   const tiers = [0.33, 0.413, 0.5];
-  return tiers[Math.floor(rand01(index, 5) * tiers.length)];
+  return tiers[Math.floor(rand01(index, 1) * tiers.length)];
 }
 
 // Left / center / right placement, never repeating the previous work's, so the
