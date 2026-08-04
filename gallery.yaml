@@ -18,6 +18,12 @@
   date: 2026-05-03
   attribution: Gemini 3.1 Pro + Nano Banana, 3 rounds of prompting
 
+- file: alien.webp
+  alternate: alien-poster.webp
+  title: "Alien: The Way of Water"
+  date: 2026-04-09
+  attribution: Gemini 3.1 Pro + Nano Banana, 2 rounds of prompting, edited in GIMP
+
 - file: rockwell.webp
   title: Sam Rockwell by Norman Rockwell
   date: 2026-02-06
