@@ -1,8 +1,3 @@
-- file: meowth-shame.webp
-  title: I Cannot Lift My Head, For I Am Full Of Shame
-  date: 2026-08-03
-  attribution: Gemini 3.1 Pro + Nano Banana, 3 rounds of prompting, edited in GIMP
-
 - file: i-would-eat-them-with-a-goat.webp
   title: I Would Eat Them With A Goat
   date: 2026-07-30
@@ -13,20 +8,6 @@
   date: 2026-07-19
   attribution: Gemini 3.1 Pro + Nano Banana, 5 rounds of prompting, image compositing
 
-- file: gotta-catch-em-all.webp
-  title: Gotta Catch 'Em All
-  date: 2026-07-21
-  attribution: Gemini 3.1 Pro + Nano Banana, 2 rounds of prompting
-
-- file: rabbit-covers-rock.webp
-  title: Rabbit Covers Rock
-  date: 2026-05-07
-  attribution: Gemini 3.1 Pro + Nano Banana, perfect the first time
-
-- file: dwaynes-jelly.webp
-  title: Dwayne's Jelly
-  date: 2026-05-03
-  attribution: Gemini 3.1 Pro + Nano Banana, 3 rounds of prompting
 
 - file: alien.webp
   alternate: alien-poster.webp
@@ -38,3 +19,32 @@
   title: Sam Rockwell by Norman Rockwell
   date: 2026-02-06
   attribution: Gemini 3.1 Pro + Nano Banana, 2 rounds of prompting, edited in GIMP
+
+
+- file: rabbit-covers-rock.webp
+  title: Rabbit Covers Rock
+  date: 2026-05-07
+  attribution: Gemini 3.1 Pro + Nano Banana, perfect the first time
+
+- file: dwaynes-jelly.webp
+  title: Dwayne's Jelly
+  date: 2026-05-03
+  attribution: Gemini 3.1 Pro + Nano Banana, 3 rounds of prompting
+
+
+- file: meowth-shame.webp
+  title: I Cannot Lift My Head, For I Am Full Of Shame
+  date: 2026-08-03
+  attribution: Gemini 3.1 Pro + Nano Banana, 3 rounds of prompting, edited in GIMP
+
+- file: gotta-catch-em-all.webp
+  title: Gotta Catch 'Em All
+  date: 2026-07-21
+  attribution: Gemini 3.1 Pro + Nano Banana, 2 rounds of prompting
+
+- file: simulation-theory.webp
+  video: https://gallery-bucket.therocksmells.com/simulation-theory.mp4
+  title: Simulation Theory
+  date: 2022-02-21
+  attribution: Extracts from Pokemon Go, using scrcpy, ffmpeg, and custom Python generator for new text animations
+
