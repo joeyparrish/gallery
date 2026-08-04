@@ -34,6 +34,11 @@ export function parseEntry(entry, i) {
     throw new Error(`${where} ("${entry.title}"): "attribution" must be a single string if present`);
   }
 
+  const { alternate } = entry;
+  if (alternate !== undefined && alternate !== null && typeof alternate !== 'string') {
+    throw new Error(`${where} ("${entry.title}"): "alternate" must be a single string if present`);
+  }
+
   const date = entry.date.trim();
   if (!DATE_RE.test(date)) {
     throw new Error(
@@ -42,12 +47,14 @@ export function parseEntry(entry, i) {
   }
 
   const attr = typeof attribution === 'string' ? attribution.trim() : '';
+  const alt = typeof alternate === 'string' ? alternate.trim() : '';
 
   return {
     file: entry.file.trim(),
     title: entry.title.trim(),
     date,
     attribution: attr === '' ? null : attr,
+    alternate: alt === '' ? null : alt,
   };
 }
 

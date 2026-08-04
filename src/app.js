@@ -8,6 +8,7 @@ const viewerImg = viewer.querySelector('.viewer__img');
 const viewerTitle = viewer.querySelector('.viewer__title');
 const viewerDate = viewer.querySelector('.viewer__date');
 const viewerAttribution = viewer.querySelector('.viewer__attribution');
+const viewerAlt = viewer.querySelector('[data-alt]');
 
 // Gilt frame scaling. FRAME_TOP_SLICE must match the top border-image-slice in
 // style.css; the frame's top molding renders at FRAME_HEIGHT_FRACTION of each
@@ -18,6 +19,7 @@ const FRAME_HEIGHT_FRACTION = 0.108;
 const state = {
   items: [],
   current: -1,
+  rendition: 'main', // 'main' | 'alternate' — which rendition of `current` is shown
   lastFocus: null,
 };
 
@@ -43,6 +45,7 @@ async function init() {
   viewer.querySelector('[data-close]').addEventListener('click', close);
   viewer.querySelector('[data-prev]').addEventListener('click', () => step(-1));
   viewer.querySelector('[data-next]').addEventListener('click', () => step(1));
+  viewerAlt.addEventListener('click', toggleRendition);
   viewer.addEventListener('click', (e) => {
     if (e.target === viewer) close();
   });
@@ -153,19 +156,26 @@ function work(item, width, align) {
 
 // ---- Detail viewer (hash-routed) ---------------------------------------
 
-function indexFromHash() {
+// Resolve the hash to a work and a rendition. A hash may match a work's main
+// slug or an alternate's own slug, so both are searched; the alternate makes the
+// same work reachable as a distinct deep link (#alien-poster).
+function resolveHash() {
   const raw = decodeURIComponent(location.hash.slice(1));
-  if (!raw) return -1;
-  return state.items.findIndex((it) => it.slug === raw);
+  if (!raw) return null;
+  const main = state.items.findIndex((it) => it.slug === raw);
+  if (main >= 0) return { index: main, rendition: 'main' };
+  const alt = state.items.findIndex((it) => it.alternate && it.alternate.slug === raw);
+  if (alt >= 0) return { index: alt, rendition: 'alternate' };
+  return null;
 }
 
 function onHashChange() {
-  const idx = indexFromHash();
-  if (idx >= 0) open(idx);
+  const target = resolveHash();
+  if (target) open(target.index, target.rendition);
   else hide();
 }
 
-function open(idx) {
+function open(idx, rendition) {
   const item = state.items[idx];
   if (!item) return;
 
@@ -173,21 +183,39 @@ function open(idx) {
     state.lastFocus = document.activeElement;
   }
   state.current = idx;
+  state.rendition = rendition;
 
-  viewerImg.src = encodeURI(item.full);
+  const showingAlt = rendition === 'alternate' && item.alternate;
+  viewerImg.src = encodeURI(showingAlt ? item.alternate.full : item.full);
   viewerImg.alt = item.title;
   viewerTitle.textContent = `"${item.title}"`;
   viewerDate.textContent = item.date;
   viewerAttribution.textContent = item.attribution || '';
+
+  // The toggle only exists for works that declare an alternate. Its label is
+  // fixed; aria-pressed and the active style say which rendition is live.
+  viewerAlt.hidden = !item.alternate;
+  viewerAlt.setAttribute('aria-pressed', showingAlt ? 'true' : 'false');
 
   viewer.hidden = false;
   document.body.classList.add('viewer-open');
   viewer.querySelector('[data-close]').focus();
 }
 
+// Swap between the main rendition and the alternate by navigating the hash to
+// the other rendition's slug, which re-opens the viewer in place. Routing
+// through the hash keeps the URL truthful and the back button working.
+function toggleRendition() {
+  if (state.current === -1) return;
+  const item = state.items[state.current];
+  if (!item.alternate) return;
+  location.hash = state.rendition === 'main' ? item.alternate.slug : item.slug;
+}
+
 function hide() {
   if (state.current === -1) return;
   state.current = -1;
+  state.rendition = 'main';
   viewer.hidden = true;
   document.body.classList.remove('viewer-open');
   viewerImg.removeAttribute('src');

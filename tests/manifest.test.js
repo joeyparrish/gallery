@@ -13,6 +13,7 @@ test('parseEntry accepts a full valid entry', () => {
     title: 'A',
     date: '2026-03-14',
     attribution: 'Midjourney v6',
+    alternate: null,
   });
 });
 
@@ -21,6 +22,28 @@ test('parseEntry makes attribution optional (null when absent or blank)', () => 
   assert.equal(
     parseEntry({ file: 'a.png', title: 'A', date: '2026', attribution: '   ' }, 0).attribution,
     null,
+  );
+});
+
+test('parseEntry accepts and trims a valid alternate', () => {
+  assert.equal(
+    parseEntry({ file: 'a.png', title: 'A', date: '2026', alternate: ' a-poster.png ' }, 0).alternate,
+    'a-poster.png',
+  );
+});
+
+test('parseEntry makes alternate optional (null when absent or blank)', () => {
+  assert.equal(parseEntry({ file: 'a.png', title: 'A', date: '2026' }, 0).alternate, null);
+  assert.equal(
+    parseEntry({ file: 'a.png', title: 'A', date: '2026', alternate: '   ' }, 0).alternate,
+    null,
+  );
+});
+
+test('parseEntry rejects non-string alternate', () => {
+  assert.throws(
+    () => parseEntry({ file: 'a.png', title: 'A', date: '2026', alternate: ['x'] }, 0),
+    /alternate.*must be a single string/,
   );
 });
 

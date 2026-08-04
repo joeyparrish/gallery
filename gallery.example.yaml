@@ -7,11 +7,16 @@
 #   title:       required.
 #   date:        required. YYYY, YYYY-MM, or YYYY-MM-DD.
 #   attribution: optional. A single free-text line (generator, editing app, etc.).
+#   alternate:   optional. Filename of a second rendition of the same work,
+#                inside images/. A button in the close-up view switches between
+#                the main image and the alternate. Deep-linkable by the
+#                alternate filename (e.g. example-one-poster.jpg -> #example-one-poster).
 
 - file: example-one.jpg
   title: First Work
   date: 2026-05-14
   attribution: Midjourney v6, edited in Photoshop
+  alternate: example-one-poster.jpg
 
 - file: example-two.jpg
   title: Second Work

@@ -272,12 +272,34 @@ body > * {
   opacity: 1;
 }
 
+/* display:flex above would otherwise override the hidden attribute. */
+.viewer__btn[hidden] {
+  display: none;
+}
+
 .viewer__close {
   top: clamp(14px, 3vw, 28px);
   right: clamp(14px, 3vw, 28px);
   width: 44px;
   height: 44px;
   font-size: 1.1rem;
+}
+
+/* Alternate-rendition toggle: mirror the close control on the opposite corner.
+   The pressed state (alternate live) stays lit with a hairline pill. */
+.viewer__alt {
+  top: clamp(14px, 3vw, 28px);
+  left: clamp(14px, 3vw, 28px);
+  width: 44px;
+  height: 44px;
+  font-size: 1.3rem;
+  border-radius: 999px;
+}
+
+.viewer__alt[aria-pressed="true"] {
+  opacity: 1;
+  color: var(--paper);
+  box-shadow: inset 0 0 0 1px var(--line-strong);
 }
 
 .viewer__nav {

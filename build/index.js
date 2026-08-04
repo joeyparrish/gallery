@@ -95,6 +95,26 @@ async function build() {
     const { width, height } = await renderWebp(source, path.join(DIST_DIR, 'full', name), FULL);
     await renderWebp(source, path.join(DIST_DIR, 'thumbs', name), THUMB);
 
+    // Optional alternate rendition: same work, shown a different way. It only
+    // ever appears in the close-up viewer, so we render a full-size WebP but no
+    // thumbnail. Its slug comes from the alternate filename stem, making it an
+    // independent deep-link target (#alien-poster).
+    let alternate = null;
+    if (entry.alternate) {
+      const altSource = path.join(IMAGES_DIR, entry.alternate);
+      if (!(await fileExists(altSource))) {
+        throw new Error(
+          `gallery.yaml entry ${index} ("${entry.title}"): alternate file not found at images/${entry.alternate}`,
+        );
+      }
+      const altName = `${assetBase(entry.alternate, index)}.webp`;
+      await renderWebp(altSource, path.join(DIST_DIR, 'full', altName), FULL);
+      alternate = {
+        slug: slugify(entry.alternate.replace(/\.[^.]+$/, '')) || `work-${index}-alternate`,
+        full: `full/${altName}`,
+      };
+    }
+
     manifest.push({
       index,
       slug: slugify(entry.title) || `work-${index}`,
@@ -105,6 +125,7 @@ async function build() {
       thumb: `thumbs/${name}`,
       width,
       height,
+      alternate,
     });
   }
 
