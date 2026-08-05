@@ -49,6 +49,9 @@ test('renderGrid emits a figure per work with baked layout vars and alt', () => 
   // Responsive thumbnails: baked srcset and a sizes hint.
   assert.match(html, /srcset="thumbs\/a-100\.webp 100w"/);
   assert.match(html, /sizes="min\(/);
+  // The first work loads eagerly at high priority; the rest stay lazy.
+  assert.match(html, /fetchpriority="high"/);
+  assert.equal((html.match(/loading="lazy"/g) || []).length, 1);
   // alt describes the image: the description when present, else the title.
   assert.match(html, /alt="A red painting\."/);
   assert.match(html, /alt="B"/);

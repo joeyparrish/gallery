@@ -10,6 +10,7 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import yaml from 'js-yaml';
+import { transform } from 'esbuild';
 
 import { parseManifest, formatDate, slugify } from './manifest.js';
 import { renderWebp, renderWidth } from './thumbnails.js';
@@ -22,10 +23,10 @@ const SRC_DIR = path.join(ROOT, 'src');
 const DIST_DIR = path.join(ROOT, 'dist');
 const MANIFEST_FILE = path.join(ROOT, 'gallery.yaml');
 
-// index.html is generated (grid baked in, manifest inlined), not copied; see
-// below. frame.png is the untouched high-res source and frame.webp (half-scale,
-// lossy) is what ships, so the .png stays out of this list and never deploys.
-const STATIC_FILES = ['style.css', 'app.js', 'frame.webp'];
+// Only frame.webp is copied verbatim. index.html is generated, style.css is
+// minified and inlined into it, and app.js is minified to dist/ (all below).
+// frame.png (the high-res source) stays out of this list so it never deploys.
+const STATIC_FILES = ['frame.webp'];
 
 // Full-size detail image: near-lossless, capped for safety (originals are
 // expected to be <= 2k).
@@ -189,7 +190,9 @@ async function build() {
   // JSON the viewer reads, and the JSON-LD that describes each work for search
   // engines. Both JSON blocks escape "<" so they cannot end their <script> early.
   const template = await fs.readFile(path.join(SRC_DIR, 'index.html'), 'utf8');
-  for (const marker of ['<!--WORKS-->', '/*MANIFEST*/', '/*JSONLD*/']) {
+  const css = await fs.readFile(path.join(SRC_DIR, 'style.css'), 'utf8');
+  const appJs = await fs.readFile(path.join(SRC_DIR, 'app.js'), 'utf8');
+  for (const marker of ['<!--WORKS-->', '/*MANIFEST*/', '/*JSONLD*/', '/*STYLE*/']) {
     if (!template.includes(marker)) {
       throw new Error(`src/index.html is missing the ${marker} placeholder`);
     }
@@ -207,11 +210,17 @@ async function build() {
     video: m.video,
   }));
   const jsonLd = renderJsonLd(seoItems, SITE).replace(/</g, '\\u003c');
+  const minCss = (await transform(css, { loader: 'css', minify: true })).code.trim();
   const html = template
     .replace('<!--WORKS-->', () => grid)
     .replace('/*MANIFEST*/', () => inlineManifest)
-    .replace('/*JSONLD*/', () => jsonLd);
+    .replace('/*JSONLD*/', () => jsonLd)
+    .replace('/*STYLE*/', () => minCss);
   await fs.writeFile(path.join(DIST_DIR, 'index.html'), html);
+
+  // Minify app.js into dist/ rather than copying it verbatim.
+  const minJs = (await transform(appJs, { loader: 'js', minify: true })).code;
+  await fs.writeFile(path.join(DIST_DIR, 'app.js'), minJs);
 
   console.log(`Built ${manifest.length} entries -> dist/`);
 }
