@@ -37,7 +37,12 @@ const THUMB = { maxEdge: 1600, quality: 82 };
 const SITE = {
   baseUrl: 'https://joeyparrish.github.io/gallery/',
   name: 'Gallery',
-  author: 'Joey Parrish',
+  author: 'Joey Parrish',        // creator / credit line (no ©)
+  copyrightNotice: '© Joey Parrish', // formal copyright notice (with ©)
+  // Every work is licensed CC BY-NC-ND 4.0 (attribution, non-commercial, no
+  // derivatives); commercial or derivative use is arranged via the contact page.
+  license: 'https://creativecommons.org/licenses/by-nc-nd/4.0/',
+  acquireLicensePage: 'https://joeyparrish.github.io/joeyparrish/contact.html',
 };
 
 // A stable, url-safe basename (no extension) for an entry's generated assets.
@@ -161,7 +166,6 @@ async function build() {
   const seoItems = manifest.map((m, i) => ({
     name: m.title,
     description: m.description,
-    attribution: m.attribution,
     date: entries[i].date, // raw ISO date, which the manifest does not carry
     full: m.full,
     thumb: m.thumb,

@@ -27,7 +27,14 @@ export function renderJsonLd(items, site) {
       if (it.date) node.dateCreated = it.date;
     }
 
-    if (it.attribution) node.creditText = it.attribution;
+    // Licensing metadata (Google's "licensable image" feature). creditText is a
+    // credit line (the creator/owner name); copyrightNotice is the formal notice
+    // (the name with ©); neither is the human-facing generation attribution.
+    node.creator = { '@type': 'Person', name: site.author };
+    node.creditText = site.author;
+    node.copyrightNotice = site.copyrightNotice;
+    node.license = site.license;
+    node.acquireLicensePage = site.acquireLicensePage;
     return node;
   });
 
