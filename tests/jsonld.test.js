@@ -45,9 +45,18 @@ test('renderJsonLd maps a video work to a VideoObject with the external URL and 
   assert.equal(vid['@type'], 'VideoObject');
   assert.equal(vid.contentUrl, 'https://cdn.example/c.mp4'); // external, untouched
   assert.equal(vid.thumbnailUrl, 'https://example.com/gallery/full/c.webp'); // the poster
-  assert.equal(vid.uploadDate, '2022-02-21');
+  assert.equal(vid.uploadDate, '2022-02-21T12:00:00Z'); // full date -> midday-UTC datetime for Google
+  assert.equal(vid.dateCreated, '2022-02-21'); // date-only, on the video too
   assert.equal(vid.license, SITE.license);
   assert.deepEqual(vid.creator, { '@type': 'Person', name: 'Joey Parrish' });
+});
+
+test('renderJsonLd leaves a partial video date as-is (cannot become a datetime)', () => {
+  const items = [
+    { name: 'Clip', description: null, date: '2026', full: 'full/c.webp', thumb: 'thumbs/c.webp', video: 'https://cdn.example/c.mp4' },
+  ];
+  const vid = JSON.parse(renderJsonLd(items, SITE)).associatedMedia[0];
+  assert.equal(vid.uploadDate, '2026');
 });
 
 test('renderJsonLd omits description and date when absent; license fields always present', () => {
