@@ -103,13 +103,9 @@ body > * {
   padding: clamp(48px, 8vw, 104px) var(--page-pad) 0;
   display: flex;
   flex-direction: column;
-  /* Vertical rhythm between works. Approximates the old JS width tiers, and is a
-     good Phase-2 simplification candidate. */
-  gap: 144px;
+  /* Vertical rhythm between works: fluid from phone to wide desktop. */
+  gap: clamp(144px, 22vw, 300px);
 }
-
-@media (min-width: 700px)  { .grid { gap: 220px; } }
-@media (min-width: 1200px) { .grid { gap: 300px; } }
 
 .work {
   display: flex;
