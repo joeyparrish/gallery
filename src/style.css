@@ -154,7 +154,6 @@ body > * {
     calc(10.5158cqw / var(--ar)) calc(9.9474cqw / var(--ar));
   border-image: url("frame.webp") 186 182 185 175 round;
   filter: drop-shadow(var(--frame-shadow));
-  transition: box-shadow 180ms var(--ease);
 }
 
 .work__img {
@@ -189,7 +188,6 @@ body > * {
   pointer-events: none;
   -webkit-backdrop-filter: blur(2px);
   backdrop-filter: blur(2px);
-  transition: background 180ms var(--ease);
 }
 
 .work__play::before {
