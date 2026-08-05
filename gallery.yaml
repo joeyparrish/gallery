@@ -1,10 +1,12 @@
 - file: i-would-eat-them-with-a-goat.webp
   title: I Would Eat Them With A Goat
+  description: An oil painting of Lionel Messi, sitting in an ornate dining room, with a plate of green eggs and ham in front of him.  A portrait of Theodore Geisel looks over his shoulder.
   date: 2026-07-30
   attribution: Gemini 3.1 Pro + Nano Banana, 5 rounds of prompting, image compositing
 
 - file: four-more-years.webp
   title: Four More Years
+  description: Lionel Messi recuperates in an advanced healing tank, surrounded by his nation's top scientists, who monitor his condition and help rebuild his aging husk of a body for the next FIFA World Cup.
   date: 2026-07-19
   attribution: Gemini 3.1 Pro + Nano Banana, 5 rounds of prompting, image compositing
 
@@ -12,39 +14,47 @@
 - file: alien.webp
   alternate: alien-poster.webp
   title: "Alien: The Way of Water"
+  description: A Xenomorph from the Alien movies, neurally connected to a Pandoran whale, surfing on its back through a luminescent ocean.  In the background, floating mountains drift through the sky at sunset.
   date: 2026-04-09
   attribution: Gemini 3.1 Pro + Nano Banana, 2 rounds of prompting, edited in GIMP
 
 - file: rockwell.webp
   title: Sam Rockwell by Norman Rockwell
+  description: A painting in the style of Norman Rockwell, in which Sam Rockwell sits at a diner counter, surrounded by townsfolk, being served pie by Dame Judi Dench.
   date: 2026-02-06
   attribution: Gemini 3.1 Pro + Nano Banana, 2 rounds of prompting, edited in GIMP
 
 
 - file: rabbit-covers-rock.webp
   title: Rabbit Covers Rock
+  description: 'Dwayne "The Rock" Johnson in a hay-filled barn, covered in a swarm of rabbits.  His terror is palpable.'
   date: 2026-05-07
   attribution: Gemini 3.1 Pro + Nano Banana, perfect the first time
 
 - file: dwaynes-jelly.webp
   title: Dwayne's Jelly
+  description: 'Dwayne "The Rock" Johnson, jealous of Jason having his own deli, decides once again to claim it for himself.  The police are very much sick of responding to this particular call.'
   date: 2026-05-03
   attribution: Gemini 3.1 Pro + Nano Banana, 3 rounds of prompting
 
 
 - file: meowth-shame.webp
   title: I Cannot Lift My Head, For I Am Full Of Shame
+  description: Meowth sits in an ornate restaurant, his face covered with a napkin, eating a whole Starly, which had been force-fed figs and grains before being drowned in Armagnac and roasted whole.  He knows it is wrong, but Team Go Rocket has taught him that only wealth, privilege, and pleasure hold meaning in an otherwise cruel and random universe.
   date: 2026-08-03
   attribution: Gemini 3.1 Pro + Nano Banana, 3 rounds of prompting, edited in GIMP
 
 - file: gotta-catch-em-all.webp
   title: Gotta Catch 'Em All
+  description: |
+    A silhouette of Robert F. Kennedy, Jr., surrounded by viruses and bacteria, with the catch phrase "Gotta Catch 'Em All" in the classic Pokémon font.
   date: 2026-07-21
   attribution: Gemini 3.1 Pro + Nano Banana, 2 rounds of prompting
 
 - file: simulation-theory.webp
   video: https://gallery-bucket.therocksmells.com/simulation-theory.mp4
   title: Simulation Theory
+  description: "Professor Willow from Pokémon Go has new research to answer a deep and disturbing question: are we living in an elaborate simulation?"
   date: 2022-02-21
-  attribution: Extracts from Pokemon Go, using scrcpy, ffmpeg, and custom Python generator for new text animations
+  attribution: Extracts from Pokémon Go, using scrcpy, ffmpeg, and custom Python generator for new text animations
 
