@@ -39,6 +39,11 @@ export function parseEntry(entry, i) {
     throw new Error(`${where} ("${entry.title}"): "alternate" must be a single string if present`);
   }
 
+  const { video } = entry;
+  if (video !== undefined && video !== null && typeof video !== 'string') {
+    throw new Error(`${where} ("${entry.title}"): "video" must be a single string (URL) if present`);
+  }
+
   const date = entry.date.trim();
   if (!DATE_RE.test(date)) {
     throw new Error(
@@ -48,6 +53,15 @@ export function parseEntry(entry, i) {
 
   const attr = typeof attribution === 'string' ? attribution.trim() : '';
   const alt = typeof alternate === 'string' ? alternate.trim() : '';
+  const vid = typeof video === 'string' ? video.trim() : '';
+
+  // A video and an alternate rendition have no combined meaning yet: `file` is
+  // the poster for a video, but the alternate toggle swaps between two stills.
+  if (vid !== '' && alt !== '') {
+    throw new Error(
+      `${where} ("${entry.title}"): an entry cannot set both "video" and "alternate"`,
+    );
+  }
 
   return {
     file: entry.file.trim(),
@@ -55,6 +69,7 @@ export function parseEntry(entry, i) {
     date,
     attribution: attr === '' ? null : attr,
     alternate: alt === '' ? null : alt,
+    video: vid === '' ? null : vid,
   };
 }
 

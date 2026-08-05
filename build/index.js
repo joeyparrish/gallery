@@ -126,6 +126,10 @@ async function build() {
       width,
       height,
       alternate,
+      // External clip URL, or null. `file` above is this entry's poster still,
+      // which rides the normal image pipeline; the clip itself is never touched
+      // by the build.
+      video: entry.video,
     });
   }
 

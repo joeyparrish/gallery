@@ -11,6 +11,11 @@
 #                inside images/. A button in the close-up view switches between
 #                the main image and the alternate. Deep-linkable by the
 #                alternate filename (e.g. example-one-poster.jpg -> #example-one-poster).
+#                Cannot be combined with video on the same entry.
+#   video:       optional. URL of an external video clip (e.g. an object-store
+#                bucket). When set, the entry is a video: `file` is its committed
+#                poster still, the index shows that poster with a play badge, and
+#                the close-up view plays the clip with native controls on click.
 
 - file: example-one.jpg
   title: First Work
@@ -21,3 +26,9 @@
 - file: example-two.jpg
   title: Second Work
   date: 2026-04
+
+- file: example-three-poster.jpg
+  video: https://cdn.example.com/example-three.mp4
+  title: Third Work
+  date: 2026-03
+  attribution: Runway Gen-4

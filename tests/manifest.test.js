@@ -14,6 +14,7 @@ test('parseEntry accepts a full valid entry', () => {
     date: '2026-03-14',
     attribution: 'Midjourney v6',
     alternate: null,
+    video: null,
   });
 });
 
@@ -44,6 +45,42 @@ test('parseEntry rejects non-string alternate', () => {
   assert.throws(
     () => parseEntry({ file: 'a.png', title: 'A', date: '2026', alternate: ['x'] }, 0),
     /alternate.*must be a single string/,
+  );
+});
+
+test('parseEntry accepts and trims a valid video URL', () => {
+  assert.equal(
+    parseEntry(
+      { file: 'poster.png', title: 'A', date: '2026', video: ' https://cdn.example/a.mp4 ' },
+      0,
+    ).video,
+    'https://cdn.example/a.mp4',
+  );
+});
+
+test('parseEntry makes video optional (null when absent or blank)', () => {
+  assert.equal(parseEntry({ file: 'a.png', title: 'A', date: '2026' }, 0).video, null);
+  assert.equal(
+    parseEntry({ file: 'a.png', title: 'A', date: '2026', video: '   ' }, 0).video,
+    null,
+  );
+});
+
+test('parseEntry rejects non-string video', () => {
+  assert.throws(
+    () => parseEntry({ file: 'a.png', title: 'A', date: '2026', video: ['x'] }, 0),
+    /video.*must be a single string/,
+  );
+});
+
+test('parseEntry rejects an entry that sets both video and alternate', () => {
+  assert.throws(
+    () =>
+      parseEntry(
+        { file: 'a.png', title: 'A', date: '2026', video: 'https://x/a.mp4', alternate: 'b.png' },
+        0,
+      ),
+    /cannot set both "video" and "alternate"/,
   );
 });
 

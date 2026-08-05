@@ -5,6 +5,7 @@
 const grid = document.getElementById('grid');
 const viewer = document.getElementById('viewer');
 const viewerImg = viewer.querySelector('.viewer__img');
+const viewerVideo = viewer.querySelector('.viewer__video');
 const viewerTitle = viewer.querySelector('.viewer__title');
 const viewerDate = viewer.querySelector('.viewer__date');
 const viewerAttribution = viewer.querySelector('.viewer__attribution');
@@ -142,6 +143,15 @@ function work(item, width, align) {
   img.decoding = 'async';
   frame.appendChild(img);
 
+  // A video entry shows its poster here with a quiet play badge; the clip only
+  // plays in the close-up view. The badge is decorative — the tile is the link.
+  if (item.video) {
+    const play = document.createElement('div');
+    play.className = 'work__play';
+    play.setAttribute('aria-hidden', 'true');
+    frame.appendChild(play);
+  }
+
   const caption = document.createElement('div');
   caption.className = 'tile__caption';
 
@@ -185,15 +195,34 @@ function open(idx, rendition) {
   state.current = idx;
   state.rendition = rendition;
 
+  // Stop and detach whatever was showing before swapping media in.
+  resetViewerMedia();
+
   const showingAlt = rendition === 'alternate' && item.alternate;
-  viewerImg.src = encodeURI(showingAlt ? item.alternate.full : item.full);
-  viewerImg.alt = item.title;
+
+  if (item.video) {
+    // Video entry: `full` is the poster still, shown until the viewer plays.
+    // preload="none" (in the markup) means no clip bytes load until then. The
+    // poster's dimensions size the box so the still is not letterboxed.
+    viewerVideo.poster = encodeURI(item.full);
+    viewerVideo.src = item.video;
+    viewerVideo.style.aspectRatio = `${item.width} / ${item.height}`;
+    viewerVideo.setAttribute('aria-label', item.title);
+    viewerVideo.hidden = false;
+    viewerImg.hidden = true;
+  } else {
+    viewerImg.src = encodeURI(showingAlt ? item.alternate.full : item.full);
+    viewerImg.alt = item.title;
+    viewerImg.hidden = false;
+    viewerVideo.hidden = true;
+  }
+
   viewerTitle.textContent = `"${item.title}"`;
   viewerDate.textContent = item.date;
   viewerAttribution.textContent = item.attribution || '';
 
-  // The toggle only exists for works that declare an alternate. Its label is
-  // fixed; aria-pressed and the active style say which rendition is live.
+  // The toggle only exists for works that declare an alternate (never a video).
+  // Its label is fixed; aria-pressed and the active style say which is live.
   viewerAlt.hidden = !item.alternate;
   viewerAlt.setAttribute('aria-pressed', showingAlt ? 'true' : 'false');
 
@@ -212,13 +241,23 @@ function toggleRendition() {
   location.hash = state.rendition === 'main' ? item.alternate.slug : item.slug;
 }
 
+// Stop and detach whichever medium was showing, so a clip never keeps playing
+// or downloading once the viewer navigates away or closes.
+function resetViewerMedia() {
+  if (!viewerVideo.paused) viewerVideo.pause();
+  viewerVideo.removeAttribute('src');
+  viewerVideo.removeAttribute('poster');
+  viewerVideo.load(); // flush the media element so buffering stops
+  viewerImg.removeAttribute('src');
+}
+
 function hide() {
   if (state.current === -1) return;
   state.current = -1;
   state.rendition = 'main';
   viewer.hidden = true;
   document.body.classList.remove('viewer-open');
-  viewerImg.removeAttribute('src');
+  resetViewerMedia();
   if (state.lastFocus && document.contains(state.lastFocus)) {
     state.lastFocus.focus();
   }
