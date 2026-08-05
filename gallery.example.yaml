@@ -16,12 +16,16 @@
 #                bucket). When set, the entry is a video: `file` is its committed
 #                poster still, the index shows that poster with a play badge, and
 #                the close-up view plays the clip with native controls on click.
+#   description: optional. A sentence or two describing the work. Not shown to
+#                viewers; emitted as JSON-LD structured data so search engines
+#                can understand each work.
 
 - file: example-one.jpg
   title: First Work
   date: 2026-05-14
   attribution: Midjourney v6, edited in Photoshop
   alternate: example-one-poster.jpg
+  description: A quiet study of red dunes at dawn, rendered in oil-painting style.
 
 - file: example-two.jpg
   title: Second Work

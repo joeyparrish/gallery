@@ -44,6 +44,11 @@ export function parseEntry(entry, i) {
     throw new Error(`${where} ("${entry.title}"): "video" must be a single string (URL) if present`);
   }
 
+  const { description } = entry;
+  if (description !== undefined && description !== null && typeof description !== 'string') {
+    throw new Error(`${where} ("${entry.title}"): "description" must be a single string if present`);
+  }
+
   const date = entry.date.trim();
   if (!DATE_RE.test(date)) {
     throw new Error(
@@ -54,6 +59,7 @@ export function parseEntry(entry, i) {
   const attr = typeof attribution === 'string' ? attribution.trim() : '';
   const alt = typeof alternate === 'string' ? alternate.trim() : '';
   const vid = typeof video === 'string' ? video.trim() : '';
+  const desc = typeof description === 'string' ? description.trim() : '';
 
   // A video and an alternate rendition have no combined meaning yet: `file` is
   // the poster for a video, but the alternate toggle swaps between two stills.
@@ -70,6 +76,7 @@ export function parseEntry(entry, i) {
     attribution: attr === '' ? null : attr,
     alternate: alt === '' ? null : alt,
     video: vid === '' ? null : vid,
+    description: desc === '' ? null : desc,
   };
 }
 

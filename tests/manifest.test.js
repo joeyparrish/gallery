@@ -15,6 +15,7 @@ test('parseEntry accepts a full valid entry', () => {
     attribution: 'Midjourney v6',
     alternate: null,
     video: null,
+    description: null,
   });
 });
 
@@ -70,6 +71,29 @@ test('parseEntry rejects non-string video', () => {
   assert.throws(
     () => parseEntry({ file: 'a.png', title: 'A', date: '2026', video: ['x'] }, 0),
     /video.*must be a single string/,
+  );
+});
+
+test('parseEntry accepts and trims a description', () => {
+  assert.equal(
+    parseEntry({ file: 'a.png', title: 'A', date: '2026', description: '  A goat at dinner.  ' }, 0)
+      .description,
+    'A goat at dinner.',
+  );
+});
+
+test('parseEntry makes description optional (null when absent or blank)', () => {
+  assert.equal(parseEntry({ file: 'a.png', title: 'A', date: '2026' }, 0).description, null);
+  assert.equal(
+    parseEntry({ file: 'a.png', title: 'A', date: '2026', description: '   ' }, 0).description,
+    null,
+  );
+});
+
+test('parseEntry rejects non-string description', () => {
+  assert.throws(
+    () => parseEntry({ file: 'a.png', title: 'A', date: '2026', description: 42 }, 0),
+    /description.*must be a single string/,
   );
 });
 

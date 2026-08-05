@@ -14,6 +14,7 @@ import yaml from 'js-yaml';
 import { parseManifest, formatDate, slugify } from './manifest.js';
 import { renderWebp } from './thumbnails.js';
 import { renderGrid } from './grid.js';
+import { renderJsonLd } from './jsonld.js';
 
 const ROOT = path.resolve(import.meta.dirname, '..');
 const IMAGES_DIR = path.join(ROOT, 'images');
@@ -30,6 +31,14 @@ const STATIC_FILES = ['style.css', 'app.js', 'frame.webp'];
 // expected to be <= 2k). Thumbnail: light, for the grid.
 const FULL = { maxEdge: 2560, quality: 90 };
 const THUMB = { maxEdge: 1600, quality: 82 };
+
+// Canonical site identity, used for the absolute URLs in the JSON-LD (and the
+// og:url / canonical link baked into index.html).
+const SITE = {
+  baseUrl: 'https://joeyparrish.github.io/gallery/',
+  name: 'Gallery',
+  author: 'Joey Parrish',
+};
 
 // A stable, url-safe basename (no extension) for an entry's generated assets.
 function assetBase(file, index) {
@@ -135,20 +144,33 @@ async function build() {
     });
   }
 
-  // Bake the grid and the manifest into index.html so the shipped page contains
-  // the whole gallery. The manifest is inlined as JSON (escaped so it cannot end
-  // the script element early) for the viewer to read without a fetch.
+  // Bake three things into index.html: the visible grid, the inlined manifest
+  // JSON the viewer reads, and the JSON-LD that describes each work for search
+  // engines. Both JSON blocks escape "<" so they cannot end their <script> early.
   const template = await fs.readFile(path.join(SRC_DIR, 'index.html'), 'utf8');
-  for (const marker of ['<!--WORKS-->', '/*MANIFEST*/']) {
+  for (const marker of ['<!--WORKS-->', '/*MANIFEST*/', '/*JSONLD*/']) {
     if (!template.includes(marker)) {
       throw new Error(`src/index.html is missing the ${marker} placeholder`);
     }
   }
   const grid = renderGrid(manifest);
   const inlineManifest = JSON.stringify(manifest).replace(/</g, '\\u003c');
+  // The JSON-LD needs the raw ISO date and the description, which the manifest
+  // does not carry, so pair each work with its parsed entry.
+  const seoItems = manifest.map((m, i) => ({
+    name: m.title,
+    description: entries[i].description,
+    attribution: m.attribution,
+    date: entries[i].date,
+    full: m.full,
+    thumb: m.thumb,
+    video: m.video,
+  }));
+  const jsonLd = renderJsonLd(seoItems, SITE).replace(/</g, '\\u003c');
   const html = template
     .replace('<!--WORKS-->', () => grid)
-    .replace('/*MANIFEST*/', () => inlineManifest);
+    .replace('/*MANIFEST*/', () => inlineManifest)
+    .replace('/*JSONLD*/', () => jsonLd);
   await fs.writeFile(path.join(DIST_DIR, 'index.html'), html);
 
   console.log(`Built ${manifest.length} entries -> dist/`);
