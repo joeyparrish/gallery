@@ -45,14 +45,16 @@ const SITE = {
   acquireLicensePage: 'https://joeyparrish.github.io/joeyparrish/contact.html',
 };
 
-// A stable, url-safe basename (no extension) for an entry's generated assets.
-function assetBase(file, index) {
-  const stem = file
+// A stable, url-safe basename (no extension) for an entry's generated assets,
+// derived only from the source filename so it stays the same when works are
+// reordered, keeping already-cached images valid. Uniqueness across all works is
+// enforced in build() (see claimName).
+function assetBase(file) {
+  return file
     .replace(/\.[^.]+$/, '')
     .replace(/[^a-z0-9]+/gi, '-')
     .replace(/^-+|-+$/g, '')
     .toLowerCase();
-  return `${String(index).padStart(3, '0')}-${stem}`;
 }
 
 async function fileExists(p) {
@@ -96,6 +98,20 @@ async function build() {
 
   const manifest = [];
 
+  // Generated filenames now come from the source stem, so two works whose source
+  // files normalize to the same name would overwrite each other. Fail loudly
+  // instead, pointing at the offending entry.
+  const usedNames = new Set();
+  const claimName = (base, index, title) => {
+    if (usedNames.has(base)) {
+      throw new Error(
+        `gallery.yaml entry ${index} ("${title}"): generated filename "${base}.webp" collides with another work; rename the source file so its name is unique.`,
+      );
+    }
+    usedNames.add(base);
+    return base;
+  };
+
   for (let i = 0; i < entries.length; i++) {
     const entry = entries[i];
     const index = i + 1;
@@ -107,7 +123,7 @@ async function build() {
       );
     }
 
-    const name = `${assetBase(entry.file, index)}.webp`;
+    const name = `${claimName(assetBase(entry.file), index, entry.title)}.webp`;
     const { width, height } = await renderWebp(source, path.join(DIST_DIR, 'full', name), FULL);
     await renderWebp(source, path.join(DIST_DIR, 'thumbs', name), THUMB);
 
@@ -123,7 +139,7 @@ async function build() {
           `gallery.yaml entry ${index} ("${entry.title}"): alternate file not found at images/${entry.alternate}`,
         );
       }
-      const altName = `${assetBase(entry.alternate, index)}.webp`;
+      const altName = `${claimName(assetBase(entry.alternate), index, entry.title)}.webp`;
       await renderWebp(altSource, path.join(DIST_DIR, 'full', altName), FULL);
       alternate = {
         slug: slugify(entry.alternate.replace(/\.[^.]+$/, '')) || `work-${index}-alternate`,
