@@ -25,7 +25,6 @@ const MANIFEST_FILE = path.join(ROOT, 'gallery.yaml');
 
 // Only frame.webp is copied verbatim. index.html is generated, style.css is
 // minified and inlined into it, and app.js is minified to dist/ (all below).
-// frame.png (the high-res source) stays out of this list so it never deploys.
 const STATIC_FILES = ['frame.webp'];
 
 // Full-size detail image: near-lossless, capped for safety (originals are
