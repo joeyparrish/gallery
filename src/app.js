@@ -17,6 +17,10 @@ const viewerAlt = viewer.querySelector('[data-alt]');
 const FRAME_TOP_SLICE = 190;
 const FRAME_HEIGHT_FRACTION = 0.108;
 
+// Ceiling on a single work's rendered height, as a fraction of the viewport, so
+// an extreme portrait sized by area can't tower over the procession.
+const MAX_HEIGHT = 0.72;
+
 const state = {
   items: [],
   current: -1,
@@ -69,13 +73,30 @@ function render() {
   grid.textContent = '';
 
   let prevAlign = '';
+  const maxH = MAX_HEIGHT * svh;
   for (const item of state.items) {
     const ar = item.width / item.height;
-    let h = heightTier(item.index) * svh; // capped at 33svh by the tiers
-    let w = h * ar;
+    // Landscapes and squares keep their height-based size, which already reads
+    // well. Portraits are sized by area (the geometric mean of their sides)
+    // instead, so a tall, narrow work grows to carry the same visual mass rather
+    // than shrinking to a sliver. The two rules meet exactly at a square, so
+    // there is no jump across the boundary.
+    const size = sizeTier(item.index) * svh;
+    let w, h;
+    if (ar >= 1) {
+      h = size;
+      w = h * ar;
+    } else {
+      w = size * Math.sqrt(ar);
+      h = size / Math.sqrt(ar);
+    }
     if (w > width) {
       w = width; // a wide work can't exceed the column
       h = w / ar;
+    }
+    if (h > maxH) {
+      h = maxH; // an extreme portrait can't tower over the procession
+      w = h * ar;
     }
     const align = small ? 'center' : pickAlign(item.index, prevAlign);
     if (!small) prevAlign = align;
@@ -104,9 +125,11 @@ function rand01(seed, salt) {
   return x - Math.floor(x);
 }
 
-// A work's height as a fraction of the viewport, capped at 33svh: a few
-// discrete sizes so the procession has large and small moments.
-function heightTier(index) {
+// A work's base size as a fraction of the viewport: for a landscape it is the
+// rendered height, for a portrait the geometric mean of its sides (the two
+// coincide at a square). A few discrete tiers give the procession large and
+// small moments.
+function sizeTier(index) {
   const tiers = [0.33, 0.413, 0.5];
   return tiers[Math.floor(rand01(index, 1) * tiers.length)];
 }
