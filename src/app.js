@@ -21,6 +21,9 @@ const FRAME_HEIGHT_FRACTION = 0.108;
 // an extreme portrait sized by area can't tower over the procession.
 const MAX_HEIGHT = 0.72;
 
+// Title reported to analytics for the index (no work open).
+const SITE_TITLE = document.title;
+
 const state = {
   items: [],
   current: -1,
@@ -204,8 +207,24 @@ function resolveHash() {
 
 function onHashChange() {
   const target = resolveHash();
-  if (target) open(target.index, target.rendition);
-  else hide();
+  if (target) {
+    open(target.index, target.rendition);
+    trackView(state.items[target.index].title);
+  } else {
+    hide();
+    trackView(SITE_TITLE);
+  }
+}
+
+// Report the current view to Google Analytics. Hash routing never reloads the
+// page, so the tag's automatic page_view is disabled (see index.html) and we
+// send one per route ourselves. A no-op if the tag is absent or blocked.
+function trackView(title) {
+  if (typeof window.gtag !== 'function') return;
+  window.gtag('event', 'page_view', {
+    page_location: location.href,
+    page_title: title,
+  });
 }
 
 function open(idx, rendition) {
@@ -290,10 +309,13 @@ function hide() {
 // Close by stripping the hash without leaving a trailing '#'; hide directly
 // since replaceState does not emit a hashchange.
 function close() {
+  const wasOpen = state.current !== -1;
   if (location.hash) {
     history.replaceState(null, '', location.pathname + location.search);
   }
   hide();
+  // replaceState fires no hashchange, so record the return to the index here.
+  if (wasOpen) trackView(SITE_TITLE);
 }
 
 // Move to a neighbor (wrapping) by navigating the hash, which re-opens.

@@ -12,7 +12,9 @@
     function gtag(){dataLayer.push(arguments);}
     gtag('js', new Date());
 
-    gtag('config', 'G-L18P7Y992N');
+    // Hash routing never reloads the page; app.js sends a page_view per route,
+    // so disable the automatic one here to avoid double-counting the landing view.
+    gtag('config', 'G-L18P7Y992N', { send_page_view: false });
   </script>
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
