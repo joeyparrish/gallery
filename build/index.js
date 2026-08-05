@@ -132,6 +132,7 @@ async function build() {
       title: entry.title,
       date: formatDate(entry.date),
       attribution: entry.attribution,
+      description: entry.description,
       full: `full/${name}`,
       thumb: `thumbs/${name}`,
       width,
@@ -159,9 +160,9 @@ async function build() {
   // does not carry, so pair each work with its parsed entry.
   const seoItems = manifest.map((m, i) => ({
     name: m.title,
-    description: entries[i].description,
+    description: m.description,
     attribution: m.attribution,
-    date: entries[i].date,
+    date: entries[i].date, // raw ISO date, which the manifest does not carry
     full: m.full,
     thumb: m.thumb,
     video: m.video,

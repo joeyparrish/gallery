@@ -58,19 +58,23 @@ function esc(s) {
     .replace(/'/g, '&#39;');
 }
 
-// Render one work as a static anchor. `--wf`, `--ar`, and `--align` are read by
-// the CSS to size and place it; the image carries a real src/alt so the work is
-// visible without JavaScript.
+// Render one work as a static anchor wrapping a figure. `--wf`, `--ar`, and
+// `--align` are read by the CSS to size and place it; the image carries a real
+// src so the work is visible without JavaScript. `alt` describes the image (the
+// work's description when it has one, else its title), while the title lives in
+// the figcaption, so the two are associated rather than duplicated.
 function renderWork(item, ar, wf, align) {
-  const alt = esc(item.title);
-  const play = item.video ? '\n      <div class="work__play" aria-hidden="true"></div>' : '';
+  const alt = esc(item.description || item.title);
+  const play = item.video ? '\n          <div class="work__play" aria-hidden="true"></div>' : '';
   return `    <a class="work" href="#${item.slug}" style="--wf:${num(wf)};--ar:${num(ar)};--align:${align}">
-      <div class="work__frame">
-        <img class="work__img" src="${encodeURI(item.thumb)}" alt="${alt}"
-             width="${item.width}" height="${item.height}" loading="lazy" decoding="async"
-             style="aspect-ratio:${item.width} / ${item.height}">${play}
-      </div>
-      <div class="tile__caption"><span class="tile__title">"${esc(item.title)}"</span></div>
+      <figure class="work__figure">
+        <div class="work__frame">
+          <img class="work__img" src="${encodeURI(item.thumb)}" alt="${alt}"
+               width="${item.width}" height="${item.height}" loading="lazy" decoding="async"
+               style="aspect-ratio:${item.width} / ${item.height}">${play}
+        </div>
+        <figcaption class="tile__caption"><span class="tile__title">"${esc(item.title)}"</span></figcaption>
+      </figure>
     </a>`;
 }
 

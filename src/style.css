@@ -131,6 +131,12 @@ body > * {
   .work { align-self: center; }
 }
 
+/* The figure groups the framed image with its title (the figcaption) so they are
+   associated for assistive tech. It carries no box of its own. */
+.work__figure {
+  margin: 0;
+}
+
 .work__frame {
   position: relative;
   overflow: hidden;

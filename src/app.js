@@ -99,6 +99,9 @@ function open(idx, rendition) {
   resetViewerMedia();
 
   const showingAlt = rendition === 'alternate' && item.alternate;
+  // Describe the media by the work's description when it has one, else its title;
+  // the title is also shown in the caption below.
+  const label = item.description || item.title;
 
   if (item.video) {
     // Video entry: `full` is the poster still, shown until the viewer plays.
@@ -107,12 +110,12 @@ function open(idx, rendition) {
     viewerVideo.poster = encodeURI(item.full);
     viewerVideo.src = item.video;
     viewerVideo.style.aspectRatio = `${item.width} / ${item.height}`;
-    viewerVideo.setAttribute('aria-label', item.title);
+    viewerVideo.setAttribute('aria-label', label);
     viewerVideo.hidden = false;
     viewerImg.hidden = true;
   } else {
     viewerImg.src = encodeURI(showingAlt ? item.alternate.full : item.full);
-    viewerImg.alt = item.title;
+    viewerImg.alt = label;
     viewerImg.hidden = false;
     viewerVideo.hidden = true;
   }

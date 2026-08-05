@@ -33,17 +33,22 @@ test('widthFactor sizes landscapes by height and portraits by area', () => {
   assert.equal(widthFactor(7, 1), sizeTier(7)); // square: the two rules agree
 });
 
-test('renderGrid emits an anchor per work with baked layout vars', () => {
+test('renderGrid emits a figure per work with baked layout vars and alt', () => {
   const manifest = [
-    { index: 1, slug: 'a', title: 'A', thumb: 'thumbs/a.webp', width: 100, height: 100, video: null },
+    { index: 1, slug: 'a', title: 'A', description: 'A red painting.', thumb: 'thumbs/a.webp', width: 100, height: 100, video: null },
     { index: 2, slug: 'b-clip', title: 'B', thumb: 'thumbs/b.webp', width: 200, height: 100, video: 'https://x/b.mp4' },
   ];
   const html = renderGrid(manifest);
   assert.equal((html.match(/<a class="work"/g) || []).length, 2);
+  assert.equal((html.match(/<figure class="work__figure"/g) || []).length, 2);
+  assert.equal((html.match(/<figcaption/g) || []).length, 2);
   assert.match(html, /href="#a"/);
   assert.match(html, /--wf:/);
   assert.match(html, /--ar:/);
   assert.match(html, /--align:/);
+  // alt describes the image: the description when present, else the title.
+  assert.match(html, /alt="A red painting\."/);
+  assert.match(html, /alt="B"/);
   // Only the video entry gets a play badge.
   assert.equal((html.match(/work__play/g) || []).length, 1);
 });
