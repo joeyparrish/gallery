@@ -1,29 +1,44 @@
 /* Gallery — a lit dark wall.
-   Serif titles, monospace records, works mounted as numbered plates on a
-   subtly top-lit, textured near-black ground. */
+   Serif titles, monospace records, framed works on a subtly top-lit, textured
+   near-black ground. Every color lives in the :root palette below; the rules
+   reference those variables and never hard-code a hex or rgba value, so the
+   whole wall can be retuned from one place. */
 
 :root {
-  /* Ground, derived from palette.png (charcoal -> deep navy). */
-  --ink: #05090e;
-  --ink-2: #0a141f;
+  /* ---- Ground: the wall behind every work ---------------------------- */
+  --ink: #05090e;   /* base near-black; page floor */
+  --ink-2: #0a141f; /* lifted navy: top of the vertical wash, and the frame mat */
+  /* Cool light spilling from above the wall. This is --azure at low alpha
+     (59,92,147 == #3b5c93); keep them in step if you retint the accent. */
+  --glow-top: rgba(59, 92, 147, 0.16);
 
-  /* Slate structure and hairlines. */
-  --slate: #223440;
-  --line: rgba(126, 156, 182, 0.14);
-  --line-strong: rgba(150, 184, 214, 0.34);
+  /* ---- Accent: the one saturated color ------------------------------- */
+  --azure: #3b5c93; /* focus rings and the active alternate-toggle */
 
-  /* The one accent: the palette's muted blue, lifted for visibility. */
-  --azure: #3b5c93;
+  /* ---- Hairlines and structure -------------------------------------- */
+  --line: rgba(126, 156, 182, 0.14);        /* faint dividers (footer, message) */
+  --line-strong: rgba(150, 184, 214, 0.34); /* lit inner pill on badges/toggles */
 
-  /* Text: warm off-white title, cool secondary, quiet tertiary. */
-  --paper: #e9e7e1;
-  --muted: #94a2ae;
-  --faint: #66747f;
+  /* ---- Text: warm off-white title, cool secondary, quiet tertiary ---- */
+  --paper: #e9e7e1; /* titles and active glyphs */
+  --muted: #94a2ae; /* dates and resting controls */
+  --faint: #66747f; /* attribution and footer */
 
+  /* ---- Overlays and shadows (all near-black; alpha carries the depth) - */
+  --scrim: rgba(3, 6, 11, 0.94);            /* viewer backdrop over the gallery */
+  --badge-fill: rgba(5, 9, 14, 0.5);        /* video play-badge disc (--ink, translucent) */
+  --badge-fill-hover: rgba(5, 9, 14, 0.62); /* ...lifted on hover/focus */
+  --shadow-soft: rgba(0, 0, 0, 0.45);       /* inner seat inside the frame */
+  --shadow-deep: rgba(0, 0, 0, 0.95);       /* cast shadow beneath a work / viewer image */
+  /* Frame drop shadow, shared by the resting and focus states. */
+  --frame-shadow:
+    inset 0 0 10px var(--shadow-soft),
+    0 30px 70px -34px var(--shadow-deep);
+
+  /* ---- Layout and motion (not color) -------------------------------- */
   --gap: 28px;
   --page-pad: clamp(24px, 5vw, 76px);
   --max-width: 1360px;
-
   --ease: cubic-bezier(0.2, 0.6, 0.2, 1);
 }
 
@@ -43,7 +58,7 @@ body {
   background-color: var(--ink);
   /* Gallery light: a faint cool wash from the top, deepening to near-black. */
   background-image:
-    radial-gradient(120% 80% at 50% -20%, rgba(59, 92, 147, 0.16), transparent 60%),
+    radial-gradient(120% 80% at 50% -20%, var(--glow-top), transparent 60%),
     linear-gradient(180deg, var(--ink-2), var(--ink) 55%);
   background-attachment: fixed;
   color: var(--paper);
@@ -122,9 +137,7 @@ body > * {
     calc(186px * var(--frame)) calc(182px * var(--frame))
     calc(185px * var(--frame)) calc(175px * var(--frame));
   border-image: url("frame.webp") 186 182 185 175 round;
-  box-shadow:
-    inset 0 0 10px rgba(0, 0, 0, 0.45),
-    0 30px 70px -34px rgba(0, 0, 0, 0.95);
+  box-shadow: var(--frame-shadow);
   transition: box-shadow 180ms var(--ease);
 }
 
@@ -153,7 +166,7 @@ body > * {
   width: clamp(46px, 13%, 88px);
   aspect-ratio: 1;
   border-radius: 50%;
-  background: rgba(5, 9, 14, 0.5);
+  background: var(--badge-fill);
   box-shadow: inset 0 0 0 1px var(--line-strong);
   color: var(--paper);
   font-size: clamp(0.9rem, 2.4vw, 1.4rem);
@@ -175,7 +188,7 @@ body > * {
 
 .work:hover .work__play,
 .work:focus-visible .work__play {
-  background: rgba(5, 9, 14, 0.62);
+  background: var(--badge-fill-hover);
 }
 
 .work:focus-visible {
@@ -184,8 +197,7 @@ body > * {
 
 .work:focus-visible .work__frame {
   box-shadow:
-    inset 0 0 10px rgba(0, 0, 0, 0.45),
-    0 30px 70px -34px rgba(0, 0, 0, 0.95),
+    var(--frame-shadow),
     0 0 0 2px var(--azure);
 }
 
@@ -225,7 +237,7 @@ body > * {
   align-items: center;
   justify-content: center;
   padding: clamp(20px, 5vw, 64px);
-  background: rgba(3, 6, 11, 0.94);
+  background: var(--scrim);
   -webkit-backdrop-filter: blur(8px);
   backdrop-filter: blur(8px);
 }
@@ -249,7 +261,7 @@ body > * {
   max-width: min(100%, 1400px);
   max-height: 78vh;
   object-fit: contain;
-  box-shadow: 0 40px 90px -40px rgba(0, 0, 0, 0.95);
+  box-shadow: 0 40px 90px -40px var(--shadow-deep);
 }
 
 /* The image and video share the frame; only one is shown per entry. Guard the
