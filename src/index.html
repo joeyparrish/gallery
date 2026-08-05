@@ -5,15 +5,21 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Gallery</title>
 
-  <!-- Social / search metadata. No og:image yet (a hero image is still to be
-       chosen); previews show title + description without a picture until then. -->
+  <!-- Social / search metadata. og:image (og.jpg) is generated from src/hero.webp
+       at build time; scrapers do not reliably render WebP, hence the JPEG. -->
   <link rel="canonical" href="https://joeyparrish.github.io/gallery/">
   <meta name="description" content="A gallery of artwork by Joey Parrish.">
   <meta property="og:type" content="website">
   <meta property="og:title" content="Gallery">
   <meta property="og:description" content="A gallery of artwork by Joey Parrish.">
   <meta property="og:url" content="https://joeyparrish.github.io/gallery/">
-  <meta name="twitter:card" content="summary">
+  <meta property="og:image" content="https://joeyparrish.github.io/gallery/og.jpg">
+  <meta property="og:image:type" content="image/jpeg">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="A gilt-framed oil painting of a shamed Meowth at a formal dinner, hung on the gallery's dark wall.">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:image" content="https://joeyparrish.github.io/gallery/og.jpg">
 
   <!-- Structured data describing each work for search engines, baked in at build
        time from gallery.yaml (including per-work descriptions). Not shown to viewers. -->

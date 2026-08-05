@@ -13,7 +13,7 @@ import yaml from 'js-yaml';
 import { transform } from 'esbuild';
 
 import { parseManifest, formatDate, slugify } from './manifest.js';
-import { renderWebp, renderWidth } from './thumbnails.js';
+import { renderWebp, renderWidth, renderJpeg } from './thumbnails.js';
 import { renderGrid } from './grid.js';
 import { renderJsonLd } from './jsonld.js';
 
@@ -99,6 +99,16 @@ async function build() {
   // Static shell.
   for (const name of STATIC_FILES) {
     await fs.copyFile(path.join(SRC_DIR, name), path.join(DIST_DIR, name));
+  }
+
+  // Social preview image: hero.webp -> og.jpg. Scrapers don't reliably render
+  // WebP, so the card image is JPEG; mozjpeg q85 is small and indistinguishable
+  // at preview size. The meta tags in index.html expect 1200x630.
+  const og = await renderJpeg(path.join(SRC_DIR, 'hero.webp'), path.join(DIST_DIR, 'og.jpg'), {
+    quality: 85,
+  });
+  if (og.width !== 1200 || og.height !== 630) {
+    console.warn(`Warning: src/hero.webp is ${og.width}x${og.height}; social cards expect 1200x630.`);
   }
 
   const manifest = [];

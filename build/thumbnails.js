@@ -27,3 +27,13 @@ export async function renderWidth(input, output, { width, quality }) {
 
   return { width: info.width, height: info.height };
 }
+
+// Write a JPEG copy of `input` to `output` (for the social preview image, since
+// scrapers don't reliably render WebP). Returns the OUTPUT dimensions.
+export async function renderJpeg(input, output, { quality }) {
+  const info = await sharp(input)
+    .jpeg({ quality, mozjpeg: true })
+    .toFile(output);
+
+  return { width: info.width, height: info.height };
+}
