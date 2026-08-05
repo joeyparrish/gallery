@@ -35,8 +35,8 @@ test('widthFactor sizes landscapes by height and portraits by area', () => {
 
 test('renderGrid emits a figure per work with baked layout vars and alt', () => {
   const manifest = [
-    { index: 1, slug: 'a', title: 'A', description: 'A red painting.', thumb: 'thumbs/a.webp', width: 100, height: 100, video: null },
-    { index: 2, slug: 'b-clip', title: 'B', thumb: 'thumbs/b.webp', width: 200, height: 100, video: 'https://x/b.mp4' },
+    { index: 1, slug: 'a', title: 'A', description: 'A red painting.', thumb: 'thumbs/a-100.webp', thumbSrcset: 'thumbs/a-100.webp 100w', width: 100, height: 100, video: null },
+    { index: 2, slug: 'b-clip', title: 'B', thumb: 'thumbs/b-200.webp', thumbSrcset: 'thumbs/b-200.webp 200w', width: 200, height: 100, video: 'https://x/b.mp4' },
   ];
   const html = renderGrid(manifest);
   assert.equal((html.match(/<a class="work"/g) || []).length, 2);
@@ -46,6 +46,9 @@ test('renderGrid emits a figure per work with baked layout vars and alt', () => 
   assert.match(html, /--wf:/);
   assert.match(html, /--ar:/);
   assert.match(html, /--align:/);
+  // Responsive thumbnails: baked srcset and a sizes hint.
+  assert.match(html, /srcset="thumbs\/a-100\.webp 100w"/);
+  assert.match(html, /sizes="min\(/);
   // alt describes the image: the description when present, else the title.
   assert.match(html, /alt="A red painting\."/);
   assert.match(html, /alt="B"/);

@@ -66,10 +66,14 @@ function esc(s) {
 function renderWork(item, ar, wf, align) {
   const alt = esc(item.description || item.title);
   const play = item.video ? '\n          <div class="work__play" aria-hidden="true"></div>' : '';
+  // A tile's rendered width is dominated by wf * 100svh (capped at the column),
+  // so that is the sizes hint; the browser then picks the right srcset candidate.
+  const sizes = `min(${(wf * 100).toFixed(1)}svh, 100vw)`;
   return `    <a class="work" href="#${item.slug}" style="--wf:${num(wf)};--ar:${num(ar)};--align:${align}">
       <figure class="work__figure">
         <div class="work__frame">
-          <img class="work__img" src="${encodeURI(item.thumb)}" alt="${alt}"
+          <img class="work__img" src="${encodeURI(item.thumb)}"
+               srcset="${item.thumbSrcset}" sizes="${sizes}" alt="${alt}"
                width="${item.width}" height="${item.height}" loading="lazy" decoding="async"
                style="aspect-ratio:${item.width} / ${item.height}">${play}
         </div>

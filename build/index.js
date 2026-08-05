@@ -12,7 +12,7 @@ import path from 'node:path';
 import yaml from 'js-yaml';
 
 import { parseManifest, formatDate, slugify } from './manifest.js';
-import { renderWebp } from './thumbnails.js';
+import { renderWebp, renderWidth } from './thumbnails.js';
 import { renderGrid } from './grid.js';
 import { renderJsonLd } from './jsonld.js';
 
@@ -28,9 +28,14 @@ const MANIFEST_FILE = path.join(ROOT, 'gallery.yaml');
 const STATIC_FILES = ['style.css', 'app.js', 'frame.webp'];
 
 // Full-size detail image: near-lossless, capped for safety (originals are
-// expected to be <= 2k). Thumbnail: light, for the grid.
+// expected to be <= 2k).
 const FULL = { maxEdge: 2560, quality: 90 };
-const THUMB = { maxEdge: 1600, quality: 82 };
+
+// Responsive index thumbnails: a ladder of widths (capped per work at the source
+// width, no upscaling) emitted as a srcset, so each display/DPR downloads an
+// appropriately sized image instead of one oversized thumbnail.
+const THUMB_WIDTHS = [480, 768, 1152, 1600];
+const THUMB_QUALITY = 82;
 
 // Canonical site identity, used for the absolute URLs in the JSON-LD (and the
 // og:url / canonical link baked into index.html).
@@ -123,9 +128,22 @@ async function build() {
       );
     }
 
-    const name = `${claimName(assetBase(entry.file), index, entry.title)}.webp`;
-    const { width, height } = await renderWebp(source, path.join(DIST_DIR, 'full', name), FULL);
-    await renderWebp(source, path.join(DIST_DIR, 'thumbs', name), THUMB);
+    const base = claimName(assetBase(entry.file), index, entry.title);
+    const { width, height } = await renderWebp(source, path.join(DIST_DIR, 'full', `${base}.webp`), FULL);
+
+    // Responsive thumbnails: the width ladder capped at this work's source width
+    // (no upscaling), plus the source width itself as the top candidate.
+    const thumbWidths = THUMB_WIDTHS.filter((w) => w < width);
+    thumbWidths.push(width);
+    const srcset = [];
+    for (const w of thumbWidths) {
+      const out = await renderWidth(source, path.join(DIST_DIR, 'thumbs', `${base}-${w}.webp`), {
+        width: w,
+        quality: THUMB_QUALITY,
+      });
+      srcset.push(`thumbs/${base}-${w}.webp ${out.width}w`);
+    }
+    const thumb = `thumbs/${base}-${width}.webp`; // largest, used as the fallback src
 
     // Optional alternate rendition: same work, shown a different way. It only
     // ever appears in the close-up viewer, so we render a full-size WebP but no
@@ -154,8 +172,9 @@ async function build() {
       date: formatDate(entry.date),
       attribution: entry.attribution,
       description: entry.description,
-      full: `full/${name}`,
-      thumb: `thumbs/${name}`,
+      full: `full/${base}.webp`,
+      thumb,
+      thumbSrcset: srcset.join(', '),
       width,
       height,
       alternate,

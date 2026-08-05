@@ -16,3 +16,14 @@ export async function renderWebp(input, output, { maxEdge, quality }) {
 
   return { width: meta.width, height: meta.height };
 }
+
+// Write a WebP copy of `input` to `output` at a target pixel `width` (never
+// enlarged). Returns the OUTPUT dimensions, used for srcset width descriptors.
+export async function renderWidth(input, output, { width, quality }) {
+  const info = await sharp(input)
+    .resize({ width, withoutEnlargement: true })
+    .webp({ quality })
+    .toFile(output);
+
+  return { width: info.width, height: info.height };
+}
