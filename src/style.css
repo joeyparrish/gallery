@@ -28,13 +28,11 @@
   --scrim: rgba(3, 6, 11, 0.94);            /* viewer backdrop over the gallery */
   --badge-fill: rgba(5, 9, 14, 0.5);        /* video play-badge disc (--ink, translucent) */
   --badge-fill-hover: rgba(5, 9, 14, 0.62); /* ...lifted on hover/focus */
-  --shadow-soft: rgba(0, 0, 0, 0.45);       /* inner seat inside the frame */
   --shadow-deep: rgba(0, 0, 0, 0.95);       /* cast shadow beneath a work / viewer image */
   /* Frame drop shadow. */
   --frame-shadow: 0 30px 70px var(--shadow-deep);
 
   /* ---- Layout and motion (not color) -------------------------------- */
-  --gap: 28px;
   --page-pad: clamp(24px, 5vw, 76px);
   --max-width: 1360px;
   --ease: cubic-bezier(0.2, 0.6, 0.2, 1);
@@ -395,16 +393,6 @@ body > * {
 
 body.viewer-open {
   overflow: hidden;
-}
-
-/* ---- Loading / error state ------------------------------------------- */
-
-.grid__message {
-  font-family: 'IBM Plex Mono', ui-monospace, monospace;
-  font-size: 0.8rem;
-  letter-spacing: 0.08em;
-  color: var(--faint);
-  padding: 40px 0;
 }
 
 @media (prefers-reduced-motion: reduce) {
