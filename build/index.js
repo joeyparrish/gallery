@@ -3,9 +3,9 @@
 //   gallery.yaml + images/ + src/  ->  dist/
 //
 // Reads the manifest, validates it, generates thumbnails, records each image's
-// real dimensions, and writes dist/manifest.json alongside the copied static
-// shell and originals. Fails loudly (non-zero exit) on any bad entry so a
-// broken manifest never deploys.
+// real dimensions, bakes the grid and the inlined manifest into index.html, and
+// copies the remaining static shell. Fails loudly (non-zero exit) on any bad
+// entry so a broken manifest never deploys.
 
 import fs from 'node:fs/promises';
 import path from 'node:path';
@@ -13,6 +13,7 @@ import yaml from 'js-yaml';
 
 import { parseManifest, formatDate, slugify } from './manifest.js';
 import { renderWebp } from './thumbnails.js';
+import { renderGrid } from './grid.js';
 
 const ROOT = path.resolve(import.meta.dirname, '..');
 const IMAGES_DIR = path.join(ROOT, 'images');
@@ -20,9 +21,10 @@ const SRC_DIR = path.join(ROOT, 'src');
 const DIST_DIR = path.join(ROOT, 'dist');
 const MANIFEST_FILE = path.join(ROOT, 'gallery.yaml');
 
-// frame.png is the untouched high-res source; frame.webp (half-scale, lossy) is
-// what ships. Keep the .png out of this list so the 3.8 MB original never deploys.
-const STATIC_FILES = ['index.html', 'style.css', 'app.js', 'frame.webp'];
+// index.html is generated (grid baked in, manifest inlined), not copied; see
+// below. frame.png is the untouched high-res source and frame.webp (half-scale,
+// lossy) is what ships, so the .png stays out of this list and never deploys.
+const STATIC_FILES = ['style.css', 'app.js', 'frame.webp'];
 
 // Full-size detail image: near-lossless, capped for safety (originals are
 // expected to be <= 2k). Thumbnail: light, for the grid.
@@ -133,10 +135,21 @@ async function build() {
     });
   }
 
-  await fs.writeFile(
-    path.join(DIST_DIR, 'manifest.json'),
-    JSON.stringify(manifest, null, 2),
-  );
+  // Bake the grid and the manifest into index.html so the shipped page contains
+  // the whole gallery. The manifest is inlined as JSON (escaped so it cannot end
+  // the script element early) for the viewer to read without a fetch.
+  const template = await fs.readFile(path.join(SRC_DIR, 'index.html'), 'utf8');
+  for (const marker of ['<!--WORKS-->', '/*MANIFEST*/']) {
+    if (!template.includes(marker)) {
+      throw new Error(`src/index.html is missing the ${marker} placeholder`);
+    }
+  }
+  const grid = renderGrid(manifest);
+  const inlineManifest = JSON.stringify(manifest).replace(/</g, '\\u003c');
+  const html = template
+    .replace('<!--WORKS-->', () => grid)
+    .replace('/*MANIFEST*/', () => inlineManifest);
+  await fs.writeFile(path.join(DIST_DIR, 'index.html'), html);
 
   console.log(`Built ${manifest.length} entries -> dist/`);
 }

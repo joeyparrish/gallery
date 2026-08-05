@@ -5,6 +5,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Gallery</title>
 
+  <!-- Social / search metadata. No og:image yet (a hero image is still to be
+       chosen); previews show title + description without a picture until then. -->
+  <meta name="description" content="A gallery of artwork by Joey Parrish.">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Gallery">
+  <meta property="og:description" content="A gallery of artwork by Joey Parrish.">
+  <meta name="twitter:card" content="summary">
+
   <!-- Google tag (gtag.js) -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-L18P7Y992N"></script>
   <script>
@@ -19,14 +27,13 @@
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="stylesheet"
-        href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Spectral:ital,wght@0,300;0,400;0,500;1,300;1,400&display=swap">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Spectral:ital,wght@0,300;0,400;0,500;1,300;1,400&display=swap">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <h1 class="sr-only">Gallery</h1>
 
-  <main id="grid" class="grid" aria-label="Works"></main>
+  <main id="grid" class="grid" aria-label="Works"><!--WORKS--></main>
 
   <footer class="site-footer">© 2026 Joey Parrish</footer>
 
@@ -46,6 +53,8 @@
     </figure>
   </div>
 
+  <!-- The full manifest, baked in at build time so the viewer needs no fetch. -->
+  <script type="application/json" id="gallery-manifest">/*MANIFEST*/</script>
   <script src="app.js" type="module"></script>
 </body>
 </html>

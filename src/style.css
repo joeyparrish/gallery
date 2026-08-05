@@ -95,7 +95,7 @@ body > * {
   white-space: nowrap;
 }
 
-/* ---- Index grid (justified rows built by app.js) ---------------------- */
+/* ---- Index grid (generated at build time; sized by CSS) --------------- */
 
 .grid {
   max-width: var(--max-width);
@@ -103,19 +103,32 @@ body > * {
   padding: clamp(48px, 8vw, 104px) var(--page-pad) 0;
   display: flex;
   flex-direction: column;
-  gap: calc(var(--gap) + 24px);
+  /* Vertical rhythm between works. Approximates the old JS width tiers, and is a
+     good Phase-2 simplification candidate. */
+  gap: 144px;
 }
 
-.grid__row {
-  display: flex;
-}
+@media (min-width: 700px)  { .grid { gap: 220px; } }
+@media (min-width: 1200px) { .grid { gap: 300px; } }
 
 .work {
   display: flex;
   flex-direction: column;
   text-decoration: none;
   color: inherit;
+  /* The work is a size container so the gilt molding can scale in cqw off its
+     own post-clamp width. --wf, --ar, and --align are baked per work by the build. */
+  container-type: inline-size;
+  align-self: var(--align);
+  /* Natural size (width factor x viewport height), capped by the height ceiling
+     (aspect x 72svh) and by the column (100%). Reproduces the old JS clamps. */
+  width: min(var(--wf) * 100svh, var(--ar) * 72svh, 100%);
   max-width: 100%;
+}
+
+/* Phones: a centered stack rather than the left/right procession. */
+@media (max-width: 700px) {
+  .work { align-self: center; }
 }
 
 .work__frame {
@@ -124,15 +137,15 @@ body > * {
   /* Ornate gilt frame (frame.webp, half-scale of the source PNG). Uneven
      9-slice: the picture opening sits at a different inset on each side, so the
      slice and the border-width both use four values (top right bottom left),
-     kept in the same ratio so the corner flourishes don't distort. --frame is
-     set per work by app.js so the molding scales with each image; the value
-     here is only a fallback. Edges are repeated (round), because stretching
-     looks bad. */
-  --frame: 0.24;
+     kept in the same ratio so the corner flourishes don't distort. The molding
+     scales with each work's rendered height, which is width / --ar; width is
+     100cqw here (this frame fills its .work size container), so each border is
+     (slice / 190 * 0.108 * 100) cqw / --ar, the same ratio the old script
+     computed, now in pure CSS. Edges are repeated (round); stretching looks bad. */
   border-style: solid;
   border-width:
-    calc(186px * var(--frame)) calc(182px * var(--frame))
-    calc(185px * var(--frame)) calc(175px * var(--frame));
+    calc(10.5726cqw / var(--ar)) calc(10.3453cqw / var(--ar))
+    calc(10.5158cqw / var(--ar)) calc(9.9474cqw / var(--ar));
   border-image: url("frame.webp") 186 182 185 175 round;
   filter: drop-shadow(var(--frame-shadow));
   transition: box-shadow 180ms var(--ease);
