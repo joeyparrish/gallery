@@ -227,6 +227,11 @@ body > * {
 .viewer {
   position: fixed;
   inset: 0;
+  /* Height is the small viewport (all chrome showing), not the large one that
+     inset:0 / vh imply, so centered content stays within the visible area when
+     mobile browser chrome is up. svh is a fixed length, so unlike dvh the layout
+     never shifts as the chrome scrolls in and out. */
+  height: 100svh;
   z-index: 10;
   display: flex;
   align-items: center;
@@ -249,12 +254,15 @@ body > * {
   gap: clamp(20px, 3vw, 34px);
   max-width: 100%;
   max-height: 100%;
+  min-height: 0; /* allow the column to shrink so its media child can too */
 }
 
 .viewer__img,
 .viewer__video {
   max-width: min(100%, 1400px);
-  max-height: 78vh;
+  /* No fixed height cap. The media flex-shrinks to whatever height is left after
+     the caption, so a very tall portrait can't push the caption off screen. */
+  min-height: 0;
   object-fit: contain;
   box-shadow: 0 40px 90px -40px var(--shadow-deep);
 }
@@ -268,6 +276,7 @@ body > * {
 
 .viewer__caption {
   text-align: center;
+  flex: none; /* keep full height; the media gives way instead of the caption */
 }
 
 .viewer__title {
