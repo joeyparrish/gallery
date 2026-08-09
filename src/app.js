@@ -8,7 +8,7 @@
 // the full grid; a work page is a lean, single-subject page that this script
 // upgrades into the same interactive viewer.
 
-import { parseRoute, closeAction } from './routing.js';
+import { parseRoute, locationAction, closeAction } from './routing.js';
 
 const viewer = document.getElementById('viewer');
 const viewerImg = viewer.querySelector('.viewer__img');
@@ -80,7 +80,7 @@ function init() {
   if (grid) grid.addEventListener('click', onGridClick);
 
   // Honor the current route on load: a work page opens straight into its work.
-  syncToLocation(true);
+  syncToLocation();
 }
 
 // ---- URL helpers -------------------------------------------------------
@@ -136,26 +136,28 @@ function whenLoaded(img, cb) {
 
 // ---- Routing -----------------------------------------------------------
 
-// Open or close the viewer to match the current location. `initial` is true only
-// for the load-time call, where a work page's overlay opens over its baked-in
-// static figure.
-function syncToLocation(initial) {
+// Open or close the viewer to match the current location. On a work document
+// that resolves to the index (e.g. the back button after the page was reloaded
+// on a deep link, which fires popstate in this document instead of loading the
+// index), there is no grid here to show, so load the real index rather than just
+// hiding the overlay, which would strip back to the baked static figure.
+function syncToLocation() {
   const { slug, rendition } = parseRoute(location.pathname, location.hash, ROOT_PATH);
-  if (slug) {
-    const idx = indexOfSlug(slug);
-    if (idx >= 0) {
-      open(idx, rendition);
-      trackView();
-      return;
-    }
+  const idx = slug ? indexOfSlug(slug) : -1;
+  const action = locationAction(idx >= 0, isIndexDoc);
+  if (action === 'open') {
+    open(idx, rendition);
+    trackView();
+  } else if (action === 'navigate') {
+    location.replace(INDEX_URL); // replace, so the forward entry to the work survives
+  } else {
+    hide();
+    trackView();
   }
-  // No work in the URL (the index, or an unknown slug): show the index state.
-  hide();
-  trackView();
 }
 
 function onPopState() {
-  syncToLocation(false);
+  syncToLocation();
 }
 
 function onGridClick(e) {

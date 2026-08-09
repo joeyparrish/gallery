@@ -20,6 +20,18 @@ export function parseRoute(pathname, hash, rootPath) {
   return { slug, rendition };
 }
 
+// Decide what syncing the viewer to the current location should do:
+//   'open'     -> show the resolved work in the viewer
+//   'index'    -> reveal the index in place (index document only; its grid is live)
+//   'navigate' -> load the real index, because a work document has no grid to show
+// `hasWork` is whether the location resolved to a known work. Without this, a
+// work document that reaches the index route (e.g. back after a reload on a deep
+// link) would merely hide its overlay and strip back to its baked static figure.
+export function locationAction(hasWork, isIndexDoc) {
+  if (hasWork) return 'open';
+  return isIndexDoc ? 'index' : 'navigate';
+}
+
 // Decide what the close control should do, given whether this document is the
 // index (its grid is live in the DOM) and whether the index is the previous
 // history entry (we arrived by clicking a grid item, tagged in history.state).

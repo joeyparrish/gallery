@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
-import { parseRoute, closeAction } from '../src/routing.js';
+import { parseRoute, locationAction, closeAction } from '../src/routing.js';
 
 const ROOT = '/gallery/';
 
@@ -37,6 +37,21 @@ test('parseRoute ignores an unrelated fragment', () => {
 
 test('parseRoute decodes a percent-encoded slug', () => {
   assert.equal(parseRoute('/gallery/a%20b/', '', ROOT).slug, 'a b');
+});
+
+test('locationAction opens the resolved work in either document', () => {
+  assert.equal(locationAction(true, true), 'open');
+  assert.equal(locationAction(true, false), 'open');
+});
+
+test('locationAction reveals the index in place on the index document', () => {
+  assert.equal(locationAction(false, true), 'index');
+});
+
+test('locationAction navigates to the index from a work document (the deep-link back bug)', () => {
+  // Back to the index after a reload on a deep link fires popstate inside the
+  // work document; it has no grid to reveal, so it must load the real index.
+  assert.equal(locationAction(false, false), 'navigate');
 });
 
 test('closeAction navigates for real from a cold-loaded work page', () => {
