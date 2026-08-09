@@ -110,6 +110,9 @@ body > * {
   flex-direction: column;
   text-decoration: none;
   color: inherit;
+  /* Suppress the mobile tap-highlight rectangle, which otherwise lingers over the
+     opening viewer. Keyboard focus is shown separately (the azure frame ring). */
+  -webkit-tap-highlight-color: transparent;
   /* The work is a size container so the gilt molding can scale in cqw off its
      own post-clamp width. --wf, --ar, and --align are baked per work by the build. */
   container-type: inline-size;
