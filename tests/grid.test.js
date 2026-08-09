@@ -35,8 +35,8 @@ test('widthFactor sizes landscapes by height and portraits by area', () => {
 
 test('renderGrid emits a figure per work with baked layout vars and alt', () => {
   const manifest = [
-    { index: 1, slug: 'a', title: 'A', description: 'A red painting.', thumb: 'thumbs/a-100.webp', thumbSrcset: 'thumbs/a-100.webp 100w', width: 100, height: 100, video: null },
-    { index: 2, slug: 'b-clip', title: 'B', thumb: 'thumbs/b-200.webp', thumbSrcset: 'thumbs/b-200.webp 200w', width: 200, height: 100, video: 'https://x/b.mp4' },
+    { index: 1, slug: 'a', title: 'A', a11yText: 'A red painting.', thumb: 'thumbs/a-100.webp', thumbSrcset: 'thumbs/a-100.webp 100w', width: 100, height: 100, video: null },
+    { index: 2, slug: 'b-clip', title: 'B', a11yText: 'B', thumb: 'thumbs/b-200.webp', thumbSrcset: 'thumbs/b-200.webp 200w', width: 200, height: 100, video: 'https://x/b.mp4' },
   ];
   const html = renderGrid(manifest);
   assert.equal((html.match(/<a class="work"/g) || []).length, 2);
@@ -61,7 +61,7 @@ test('renderGrid emits a figure per work with baked layout vars and alt', () => 
 
 test('renderGrid escapes HTML in titles', () => {
   const manifest = [
-    { index: 1, slug: 'x', title: 'A <b>& "Q"', thumb: 'thumbs/x.webp', width: 10, height: 10, video: null },
+    { index: 1, slug: 'x', title: 'A <b>& "Q"', a11yText: 'A <b>& "Q"', thumb: 'thumbs/x.webp', width: 10, height: 10, video: null },
   ];
   const html = renderGrid(manifest);
   assert.doesNotMatch(html, /<b>/);

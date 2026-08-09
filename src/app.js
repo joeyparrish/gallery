@@ -207,9 +207,9 @@ function open(idx, rendition) {
   resetViewerMedia();
 
   const showingAlt = rendition === 'alternate' && item.alternate;
-  // Describe the media by the work's description when it has one, else its title;
-  // the title is also shown in the caption below.
-  const label = item.description || item.title;
+  // Describe the media by the work's full a11y-text; the title is shown in the
+  // caption below.
+  const label = item.a11yText;
 
   if (item.video) {
     // Video entry: `full` is the poster still, shown until the viewer plays.

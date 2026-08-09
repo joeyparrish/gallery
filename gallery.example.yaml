@@ -6,33 +6,41 @@
 #   file:        required. Filename inside images/.
 #   title:       required.
 #   date:        required. YYYY, YYYY-MM, or YYYY-MM-DD.
+#   a11y-text:   required. The full, faithful description of the image, for
+#                screen-reader users and image-search comprehension. Used as the
+#                image alt text and the JSON-LD description. Not shown to sighted
+#                viewers, so describe the work completely (punchline included).
+#   social-text: required. A short, spoiler-free line shown in the social preview
+#                card and the search-result snippet. This is public and visible,
+#                so keep it a teaser, not the whole joke.
 #   attribution: optional. A single free-text line (generator, editing app, etc.).
 #   alternate:   optional. Filename of a second rendition of the same work,
 #                inside images/. A button in the close-up view switches between
-#                the main image and the alternate. Deep-linkable by the
-#                alternate filename (e.g. example-one-poster.jpg -> #example-one-poster).
-#                Cannot be combined with video on the same entry.
+#                the main image and the alternate, reachable at the work's own
+#                URL with a #alternate fragment. Cannot be combined with video.
 #   video:       optional. URL of an external video clip (e.g. an object-store
 #                bucket). When set, the entry is a video: `file` is its committed
 #                poster still, the index shows that poster with a play badge, and
 #                the close-up view plays the clip with native controls on click.
-#   description: optional. A sentence or two describing the work. Not shown to
-#                viewers; emitted as JSON-LD structured data so search engines
-#                can understand each work.
 
 - file: example-one.jpg
   title: First Work
   date: 2026-05-14
+  a11y-text: A quiet study of red dunes at dawn, rendered in oil-painting style.
+  social-text: Red dunes at dawn.
   attribution: Midjourney v6, edited in Photoshop
   alternate: example-one-poster.jpg
-  description: A quiet study of red dunes at dawn, rendered in oil-painting style.
 
 - file: example-two.jpg
   title: Second Work
   date: 2026-04
+  a11y-text: A cracked ceramic bowl holding a single ripe fig, lit from the side.
+  social-text: Still life with a fig.
 
 - file: example-three-poster.jpg
   video: https://cdn.example.com/example-three.mp4
   title: Third Work
   date: 2026-03
+  a11y-text: A time-lapse of storm clouds rolling over a wheat field at dusk.
+  social-text: Storm over the wheat.
   attribution: Runway Gen-4

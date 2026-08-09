@@ -31,13 +31,15 @@ export function renderWorkMeta(item, site) {
   const slug = item.slug;
   const canonical = new URL(workPath(slug), site.baseUrl).href;
   const ogImage = new URL(`og/${slug}.jpg`, site.baseUrl).href;
-  const desc = item.description || `${item.title}, from ${site.name} by ${site.author}.`;
-  const alt = item.description || item.title;
+  // Visible preview text (social card + search snippet): the short, spoiler-free
+  // social-text. The image's alt and the structured data use the full a11y-text.
+  const desc = item.socialText;
+  const alt = item.a11yText;
   // The JSON-LD node builder keys off `name` and the raw ISO date; only "<" needs
   // neutralizing so the block cannot end its <script> early.
   const seo = {
     name: item.title,
-    description: item.description,
+    description: item.a11yText,
     date: item.rawDate,
     full: item.full,
     thumb: item.thumb,
@@ -66,7 +68,7 @@ export function renderWorkMeta(item, site) {
 // link back to the gallery. app.js opens the interactive viewer over this.
 export function renderWorkMain(item) {
   const src = ASSET_PREFIX + encodeURI(item.full);
-  const alt = esc(item.description || item.title);
+  const alt = esc(item.a11yText);
   const title = esc(item.title);
 
   // For a video work, `full` is the poster still; offer a plain link to the clip

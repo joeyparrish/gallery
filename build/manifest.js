@@ -22,7 +22,13 @@ export function parseEntry(entry, i) {
     throw new Error(`${where}: expected a mapping (file/title/date), got ${got}`);
   }
 
-  const required = { file: entry.file, title: entry.title, date: entry.date };
+  const required = {
+    file: entry.file,
+    title: entry.title,
+    date: entry.date,
+    'a11y-text': entry['a11y-text'],
+    'social-text': entry['social-text'],
+  };
   for (const [key, value] of Object.entries(required)) {
     if (typeof value !== 'string' || value.trim() === '') {
       throw new Error(`${where}: missing or empty required field "${key}"`);
@@ -44,11 +50,6 @@ export function parseEntry(entry, i) {
     throw new Error(`${where} ("${entry.title}"): "video" must be a single string (URL) if present`);
   }
 
-  const { description } = entry;
-  if (description !== undefined && description !== null && typeof description !== 'string') {
-    throw new Error(`${where} ("${entry.title}"): "description" must be a single string if present`);
-  }
-
   const date = entry.date.trim();
   if (!DATE_RE.test(date)) {
     throw new Error(
@@ -59,7 +60,11 @@ export function parseEntry(entry, i) {
   const attr = typeof attribution === 'string' ? attribution.trim() : '';
   const alt = typeof alternate === 'string' ? alternate.trim() : '';
   const vid = typeof video === 'string' ? video.trim() : '';
-  const desc = typeof description === 'string' ? description.trim() : '';
+  // Required (validated above), so always present. a11y-text is the full,
+  // faithful description for screen readers and image comprehension; social-text
+  // is the short, spoiler-free line shown in social cards and search snippets.
+  const a11yText = entry['a11y-text'].trim();
+  const socialText = entry['social-text'].trim();
 
   // A video and an alternate rendition have no combined meaning yet: `file` is
   // the poster for a video, but the alternate toggle swaps between two stills.
@@ -76,7 +81,8 @@ export function parseEntry(entry, i) {
     attribution: attr === '' ? null : attr,
     alternate: alt === '' ? null : alt,
     video: vid === '' ? null : vid,
-    description: desc === '' ? null : desc,
+    a11yText,
+    socialText,
   };
 }
 

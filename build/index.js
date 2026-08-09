@@ -221,7 +221,7 @@ async function build() {
       title: entry.title,
       date: formatDate(entry.date),
       attribution: entry.attribution,
-      description: entry.description,
+      a11yText: entry.a11yText,
       full: `full/${base}.webp`,
       thumb,
       thumbSrcset: srcset.join(', '),
@@ -251,11 +251,12 @@ async function build() {
       throw new Error(`src/index.html is missing the ${marker} placeholder`);
     }
   }
-  // The JSON-LD needs the raw ISO date and the description, which the manifest
-  // does not carry, so pair each work with its parsed entry.
+  // The JSON-LD needs the raw ISO date, which the manifest does not carry, so
+  // pair each work with its parsed entry. Structured data uses the full a11y text
+  // (comprehension), not the short social line.
   const seoItems = manifest.map((m, i) => ({
     name: m.title,
-    description: m.description,
+    description: m.a11yText,
     date: entries[i].date, // raw ISO date, which the manifest does not carry
     full: m.full,
     thumb: m.thumb,
@@ -281,7 +282,9 @@ async function build() {
   }
   for (let i = 0; i < manifest.length; i++) {
     const item = manifest[i];
-    const metaItem = { ...item, rawDate: entries[i].date };
+    // social-text lives only in the parsed entry (build-only, kept out of the
+    // baked runtime manifest); the head builder needs it plus the raw date.
+    const metaItem = { ...item, rawDate: entries[i].date, socialText: entries[i].socialText };
     const workHtml = workTemplate
       .replace('<!--WORK_META-->', () => renderWorkMeta(metaItem, SITE))
       .replace('<!--WORK_MAIN-->', () => renderWorkMain(item))

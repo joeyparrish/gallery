@@ -3,11 +3,17 @@ import assert from 'node:assert/strict';
 
 import { parseEntry, parseManifest, formatDate, slugify } from '../build/manifest.js';
 
+// A minimal valid entry (all required fields present) to spread and override.
+const REQ = {
+  file: 'a.png',
+  title: 'A',
+  date: '2026',
+  'a11y-text': 'A goat at dinner.',
+  'social-text': 'Dinner is served.',
+};
+
 test('parseEntry accepts a full valid entry', () => {
-  const out = parseEntry(
-    { file: 'a.png', title: 'A', date: '2026-03-14', attribution: 'Midjourney v6' },
-    0,
-  );
+  const out = parseEntry({ ...REQ, date: '2026-03-14', attribution: 'Midjourney v6' }, 0);
   assert.deepEqual(out, {
     file: 'a.png',
     title: 'A',
@@ -15,125 +21,106 @@ test('parseEntry accepts a full valid entry', () => {
     attribution: 'Midjourney v6',
     alternate: null,
     video: null,
-    description: null,
+    a11yText: 'A goat at dinner.',
+    socialText: 'Dinner is served.',
   });
 });
 
 test('parseEntry makes attribution optional (null when absent or blank)', () => {
-  assert.equal(parseEntry({ file: 'a.png', title: 'A', date: '2026' }, 0).attribution, null);
-  assert.equal(
-    parseEntry({ file: 'a.png', title: 'A', date: '2026', attribution: '   ' }, 0).attribution,
-    null,
-  );
+  assert.equal(parseEntry({ ...REQ }, 0).attribution, null);
+  assert.equal(parseEntry({ ...REQ, attribution: '   ' }, 0).attribution, null);
 });
 
 test('parseEntry accepts and trims a valid alternate', () => {
-  assert.equal(
-    parseEntry({ file: 'a.png', title: 'A', date: '2026', alternate: ' a-poster.png ' }, 0).alternate,
-    'a-poster.png',
-  );
+  assert.equal(parseEntry({ ...REQ, alternate: ' a-poster.png ' }, 0).alternate, 'a-poster.png');
 });
 
 test('parseEntry makes alternate optional (null when absent or blank)', () => {
-  assert.equal(parseEntry({ file: 'a.png', title: 'A', date: '2026' }, 0).alternate, null);
-  assert.equal(
-    parseEntry({ file: 'a.png', title: 'A', date: '2026', alternate: '   ' }, 0).alternate,
-    null,
-  );
+  assert.equal(parseEntry({ ...REQ }, 0).alternate, null);
+  assert.equal(parseEntry({ ...REQ, alternate: '   ' }, 0).alternate, null);
 });
 
 test('parseEntry rejects non-string alternate', () => {
   assert.throws(
-    () => parseEntry({ file: 'a.png', title: 'A', date: '2026', alternate: ['x'] }, 0),
+    () => parseEntry({ ...REQ, alternate: ['x'] }, 0),
     /alternate.*must be a single string/,
   );
 });
 
 test('parseEntry accepts and trims a valid video URL', () => {
   assert.equal(
-    parseEntry(
-      { file: 'poster.png', title: 'A', date: '2026', video: ' https://cdn.example/a.mp4 ' },
-      0,
-    ).video,
+    parseEntry({ ...REQ, file: 'poster.png', video: ' https://cdn.example/a.mp4 ' }, 0).video,
     'https://cdn.example/a.mp4',
   );
 });
 
 test('parseEntry makes video optional (null when absent or blank)', () => {
-  assert.equal(parseEntry({ file: 'a.png', title: 'A', date: '2026' }, 0).video, null);
-  assert.equal(
-    parseEntry({ file: 'a.png', title: 'A', date: '2026', video: '   ' }, 0).video,
-    null,
-  );
+  assert.equal(parseEntry({ ...REQ }, 0).video, null);
+  assert.equal(parseEntry({ ...REQ, video: '   ' }, 0).video, null);
 });
 
 test('parseEntry rejects non-string video', () => {
+  assert.throws(() => parseEntry({ ...REQ, video: ['x'] }, 0), /video.*must be a single string/);
+});
+
+test('parseEntry trims a11y-text and social-text', () => {
+  const out = parseEntry({ ...REQ, 'a11y-text': '  A goat.  ', 'social-text': '  A tease.  ' }, 0);
+  assert.equal(out.a11yText, 'A goat.');
+  assert.equal(out.socialText, 'A tease.');
+});
+
+test('parseEntry requires a11y-text', () => {
   assert.throws(
-    () => parseEntry({ file: 'a.png', title: 'A', date: '2026', video: ['x'] }, 0),
-    /video.*must be a single string/,
+    () => parseEntry({ file: 'a.png', title: 'A', date: '2026', 'social-text': 'x' }, 0),
+    /required field "a11y-text"/,
   );
+  assert.throws(() => parseEntry({ ...REQ, 'a11y-text': '   ' }, 0), /required field "a11y-text"/);
 });
 
-test('parseEntry accepts and trims a description', () => {
-  assert.equal(
-    parseEntry({ file: 'a.png', title: 'A', date: '2026', description: '  A goat at dinner.  ' }, 0)
-      .description,
-    'A goat at dinner.',
-  );
-});
-
-test('parseEntry makes description optional (null when absent or blank)', () => {
-  assert.equal(parseEntry({ file: 'a.png', title: 'A', date: '2026' }, 0).description, null);
-  assert.equal(
-    parseEntry({ file: 'a.png', title: 'A', date: '2026', description: '   ' }, 0).description,
-    null,
-  );
-});
-
-test('parseEntry rejects non-string description', () => {
+test('parseEntry requires social-text', () => {
   assert.throws(
-    () => parseEntry({ file: 'a.png', title: 'A', date: '2026', description: 42 }, 0),
-    /description.*must be a single string/,
+    () => parseEntry({ file: 'a.png', title: 'A', date: '2026', 'a11y-text': 'x' }, 0),
+    /required field "social-text"/,
   );
+  assert.throws(() => parseEntry({ ...REQ, 'social-text': '   ' }, 0), /required field "social-text"/);
 });
 
 test('parseEntry rejects an entry that sets both video and alternate', () => {
   assert.throws(
-    () =>
-      parseEntry(
-        { file: 'a.png', title: 'A', date: '2026', video: 'https://x/a.mp4', alternate: 'b.png' },
-        0,
-      ),
+    () => parseEntry({ ...REQ, video: 'https://x/a.mp4', alternate: 'b.png' }, 0),
     /cannot set both "video" and "alternate"/,
   );
 });
 
 test('parseEntry trims whitespace on fields', () => {
-  const out = parseEntry({ file: ' a.png ', title: '  A  ', date: ' 2026 ' }, 0);
+  const out = parseEntry({ ...REQ, file: ' a.png ', title: '  A  ', date: ' 2026 ' }, 0);
   assert.equal(out.file, 'a.png');
   assert.equal(out.title, 'A');
   assert.equal(out.date, '2026');
 });
 
 test('parseEntry rejects a missing required field', () => {
-  assert.throws(() => parseEntry({ file: 'a.png', title: 'A' }, 2), /entry 3.*required field "date"/s);
+  assert.throws(
+    () => parseEntry({ file: 'a.png', title: 'A', 'a11y-text': 'x', 'social-text': 'y' }, 2),
+    /entry 3.*required field "date"/s,
+  );
 });
 
 test('parseEntry rejects an empty required field', () => {
-  assert.throws(() => parseEntry({ file: '', title: 'A', date: '2026' }, 0), /required field "file"/);
+  assert.throws(() => parseEntry({ ...REQ, file: '' }, 0), /required field "file"/);
 });
 
 test('parseEntry rejects a malformed date', () => {
   assert.throws(
-    () => parseEntry({ file: 'a.png', title: 'A', date: 'March 2026' }, 0),
+    () => parseEntry({ ...REQ, date: 'March 2026' }, 0),
     /must be YYYY, YYYY-MM, or YYYY-MM-DD/,
   );
-  assert.throws(() => parseEntry({ file: 'a.png', title: 'A', date: '2026-13-40' }, 0), /must be YYYY/);
+  assert.throws(() => parseEntry({ ...REQ, date: '2026-13-40' }, 0), /must be YYYY/);
 });
 
 test('parseEntry rejects non-string attribution', () => {
   assert.throws(
-    () => parseEntry({ file: 'a.png', title: 'A', date: '2026', attribution: ['x'] }, 0),
+    () => parseEntry({ ...REQ, attribution: ['x'] }, 0),
     /attribution.*must be a single string/,
   );
 });
@@ -145,8 +132,8 @@ test('parseEntry rejects a non-mapping entry', () => {
 
 test('parseManifest preserves order and rejects a non-list / empty top level', () => {
   const out = parseManifest([
-    { file: 'a.png', title: 'A', date: '2026' },
-    { file: 'b.png', title: 'B', date: '2025' },
+    { ...REQ, title: 'A' },
+    { ...REQ, title: 'B', date: '2025' },
   ]);
   assert.deepEqual(out.map((e) => e.title), ['A', 'B']);
   assert.throws(() => parseManifest({}), /top level must be a list/);

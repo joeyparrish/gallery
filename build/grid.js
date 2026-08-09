@@ -62,11 +62,11 @@ export function esc(s) {
 // `--align` are read by the CSS to size and place it; the image carries a real
 // src so the work is visible without JavaScript. The href is the work's own page
 // (<slug>/); app.js intercepts the click to open the viewer in place, but with
-// no JavaScript the link loads that standalone page. `alt` describes the
-// image (the work's description when it has one, else its title), while the title
-// lives in the figcaption, so the two are associated rather than duplicated.
+// no JavaScript the link loads that standalone page. `alt` is the work's full
+// a11y-text, while the title lives in the figcaption, so the two are associated
+// rather than duplicated.
 function renderWork(item, ar, wf, align, eager) {
-  const alt = esc(item.description || item.title);
+  const alt = esc(item.a11yText);
   const play = item.video ? '\n          <div class="work__play" aria-hidden="true"></div>' : '';
   // A tile's rendered width is dominated by wf * 100svh (capped at the column),
   // so that is the sizes hint; the browser then picks the right srcset candidate.
