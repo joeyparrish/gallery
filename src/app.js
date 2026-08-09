@@ -18,8 +18,17 @@ const viewerDate = viewer.querySelector('.viewer__date');
 const viewerAttribution = viewer.querySelector('.viewer__attribution');
 const viewerAlt = viewer.querySelector('[data-alt]');
 
-// Title reported to analytics for the index (no work open).
-const SITE_TITLE = document.title;
+// The site name (e.g. "Gallery"), baked into every page as a meta tag. Used as
+// the document title for the index and as the suffix for a work's title.
+const siteNameMeta = document.querySelector('meta[name="application-name"]');
+const SITE_NAME = siteNameMeta ? siteNameMeta.content : document.title;
+
+// The document title for a work, matching the format its dedicated page uses so
+// the tab, bookmarks, and history read the same whether the work was opened in
+// the SPA or loaded cold.
+function workDocTitle(item) {
+  return `"${item.title}" · ${SITE_NAME}`;
+}
 
 // The dist root as an absolute URL, derived from this module's own URL so it is
 // correct at any page depth and under any base path (no hard-coded site path).
@@ -99,13 +108,13 @@ function syncToLocation(initial) {
     const idx = indexOfSlug(slug);
     if (idx >= 0) {
       open(idx, rendition);
-      trackView(state.items[idx].title);
+      trackView();
       return;
     }
   }
   // No work in the URL (the index, or an unknown slug): show the index state.
   hide();
-  trackView(SITE_TITLE);
+  trackView();
 }
 
 function onPopState() {
@@ -130,17 +139,18 @@ function onGridClick(e) {
   // Tag this entry so close() knows the (live) index is directly behind it.
   history.pushState({ indexBehind: true }, '', workUrl(slug));
   open(idx, 'main');
-  trackView(state.items[idx].title);
+  trackView();
 }
 
 // Report the current view to Google Analytics. Path routing via pushState never
 // reloads the page, so the tag's automatic page_view is disabled (see the
-// templates) and we send one per route ourselves. A no-op if the tag is absent.
-function trackView(title) {
+// templates) and we send one per route ourselves, using the document title we
+// just set. A no-op if the tag is absent.
+function trackView() {
   if (typeof window.gtag !== 'function') return;
   window.gtag('event', 'page_view', {
     page_location: location.href,
-    page_title: title,
+    page_title: document.title,
   });
 }
 
@@ -190,6 +200,10 @@ function open(idx, rendition) {
   viewerAlt.hidden = !item.alternate;
   viewerAlt.setAttribute('aria-pressed', showingAlt ? 'true' : 'false');
 
+  // Keep the tab/bookmark/history title in step with the shown work, matching
+  // the format the work's dedicated page uses.
+  document.title = workDocTitle(item);
+
   viewer.hidden = false;
   document.body.classList.add('viewer-open');
   viewer.querySelector('[data-close]').focus();
@@ -209,7 +223,7 @@ function toggleRendition() {
   url.hash = goingAlt ? 'alternate' : '';
   history.pushState({}, '', url.href);
   open(state.current, goingAlt ? 'alternate' : 'main');
-  trackView(item.title);
+  trackView();
 }
 
 // Stop and detach whichever medium was showing, so a clip never keeps playing
@@ -223,6 +237,7 @@ function resetViewerMedia() {
 }
 
 function hide() {
+  document.title = SITE_NAME; // back to the index: restore the site title
   if (state.current === -1) return;
   state.current = -1;
   state.rendition = 'main';
@@ -252,7 +267,7 @@ function close() {
     history.pushState({}, '', INDEX_URL);
   }
   hide();
-  trackView(SITE_TITLE);
+  trackView();
 }
 
 // Move to a neighbor (wrapping). Replace rather than push so the history depth
@@ -265,7 +280,7 @@ function step(delta) {
   const carry = { indexBehind: !!(history.state && history.state.indexBehind) };
   history.replaceState(carry, '', workUrl(state.items[nextIdx].slug));
   open(nextIdx, 'main');
-  trackView(state.items[nextIdx].title);
+  trackView();
 }
 
 function onKeydown(e) {
