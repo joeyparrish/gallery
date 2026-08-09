@@ -15,47 +15,56 @@ function asDateTime(date) {
   return /^\d{4}-\d{2}-\d{2}$/.test(date) ? `${date}T12:00:00Z` : date;
 }
 
-// Build the JSON-LD graph. `items` carry the raw per-work fields; `site` is
-// { baseUrl, name, author }. Relative asset paths are resolved to absolute URLs
-// against baseUrl (search engines prefer absolute); an external video URL is
-// already absolute and passes through untouched.
-export function renderJsonLd(items, site) {
+// Build one media node (ImageObject, or VideoObject for a clip) for a work.
+// `it` carries the raw per-work fields; `site` is { baseUrl, author, ... }.
+// Relative asset paths are resolved to absolute URLs against baseUrl (search
+// engines prefer absolute); an external video URL is already absolute.
+function mediaNode(it, site) {
   const abs = (p) => new URL(p, site.baseUrl).href;
 
-  const media = items.map((it) => {
-    const node = { '@type': it.video ? 'VideoObject' : 'ImageObject', name: it.name };
-    if (it.description) node.description = it.description;
+  const node = { '@type': it.video ? 'VideoObject' : 'ImageObject', name: it.name };
+  if (it.description) node.description = it.description;
 
-    if (it.video) {
-      node.contentUrl = it.video; // external clip URL, already absolute
-      node.thumbnailUrl = abs(it.full); // the poster still
-      if (it.date) node.uploadDate = asDateTime(it.date); // datetime, for Google's video result
-    } else {
-      node.contentUrl = abs(it.full);
-      node.thumbnailUrl = abs(it.thumb);
-    }
+  if (it.video) {
+    node.contentUrl = it.video; // external clip URL, already absolute
+    node.thumbnailUrl = abs(it.full); // the poster still
+    if (it.date) node.uploadDate = asDateTime(it.date); // datetime, for Google's video result
+  } else {
+    node.contentUrl = abs(it.full);
+    node.thumbnailUrl = abs(it.thumb);
+  }
 
-    // dateCreated (the work's creation date) applies to both images and video;
-    // MediaObject inherits it from CreativeWork. Kept date-only and truthful.
-    if (it.date) node.dateCreated = it.date;
+  // dateCreated (the work's creation date) applies to both images and video;
+  // MediaObject inherits it from CreativeWork. Kept date-only and truthful.
+  if (it.date) node.dateCreated = it.date;
 
-    // Licensing metadata (Google's "licensable image" feature). creditText is a
-    // credit line (the creator/owner name); copyrightNotice is the formal notice
-    // (the name with ©); neither is the human-facing generation attribution.
-    node.creator = { '@type': 'Person', name: site.author };
-    node.creditText = site.author;
-    node.copyrightNotice = site.copyrightNotice;
-    node.license = site.license;
-    node.acquireLicensePage = site.acquireLicensePage;
-    return node;
-  });
+  // Licensing metadata (Google's "licensable image" feature). creditText is a
+  // credit line (the creator/owner name); copyrightNotice is the formal notice
+  // (the name with ©); neither is the human-facing generation attribution.
+  node.creator = { '@type': 'Person', name: site.author };
+  node.creditText = site.author;
+  node.copyrightNotice = site.copyrightNotice;
+  node.license = site.license;
+  node.acquireLicensePage = site.acquireLicensePage;
+  return node;
+}
 
+// Build the JSON-LD graph for the index: an ImageGallery whose associatedMedia
+// is every work. `items` carry the raw per-work fields; `site` is
+// { baseUrl, name, author, ... }.
+export function renderJsonLd(items, site) {
   return JSON.stringify({
     '@context': 'https://schema.org',
     '@type': 'ImageGallery',
     name: site.name,
     url: site.baseUrl,
     author: { '@type': 'Person', name: site.author },
-    associatedMedia: media,
+    associatedMedia: items.map((it) => mediaNode(it, site)),
   });
+}
+
+// Build single-subject JSON-LD for one work's own page: just that work's media
+// node, with the @context attached so it stands alone.
+export function renderWorkJsonLd(item, site) {
+  return JSON.stringify({ '@context': 'https://schema.org', ...mediaNode(item, site) });
 }

@@ -1,0 +1,18 @@
+<!-- Detail viewer overlay, shared by the index and every work page (injected at
+     the VIEWER marker in each template so there is one source of truth).
+     It ships empty and hidden; app.js fills and opens it. -->
+<div id="viewer" class="viewer" hidden role="dialog" aria-modal="true" aria-label="Work detail">
+  <button class="viewer__btn viewer__close" type="button" data-close title="Close" aria-label="Close">✕</button>
+  <button class="viewer__btn viewer__alt" type="button" data-alt title="Alternate" aria-label="Show alternate rendition" aria-pressed="false" hidden>⇄</button>
+  <button class="viewer__btn viewer__nav viewer__nav--prev" type="button" data-prev title="Previous" aria-label="Previous work">‹</button>
+  <button class="viewer__btn viewer__nav viewer__nav--next" type="button" data-next title="Next" aria-label="Next work">›</button>
+  <figure class="viewer__figure">
+    <img class="viewer__img" alt="">
+    <video class="viewer__video" playsinline preload="none" controls hidden></video>
+    <figcaption class="viewer__caption">
+      <h2 class="viewer__title"></h2>
+      <p class="viewer__date"></p>
+      <p class="viewer__attribution"></p>
+    </figcaption>
+  </figure>
+</div>

@@ -1,0 +1,88 @@
+import { test } from 'node:test';
+import assert from 'node:assert/strict';
+
+import { workPath, renderWorkMeta, renderWorkMain } from '../build/pages.js';
+
+const SITE = {
+  baseUrl: 'https://joeyparrish.github.io/gallery/',
+  name: 'Gallery',
+  author: 'Joey Parrish',
+  copyrightNotice: '© Joey Parrish',
+  license: 'https://creativecommons.org/licenses/by-nc-nd/4.0/',
+  acquireLicensePage: 'https://joeyparrish.github.io/joeyparrish/contact.html',
+};
+
+const IMAGE = {
+  slug: 'alien',
+  title: 'Alien: The Way of Water',
+  date: 'April 9, 2026',
+  rawDate: '2026-04-09',
+  attribution: 'Some tools',
+  description: 'A xenomorph surfing a whale.',
+  full: 'full/alien.webp',
+  thumb: 'thumbs/alien-1408.webp',
+  width: 1408,
+  height: 768,
+  alternate: { full: 'full/alien-poster.webp' },
+  video: null,
+};
+
+const VIDEO = {
+  slug: 'simulation-theory',
+  title: 'Simulation Theory',
+  date: 'February 21, 2022',
+  rawDate: '2022-02-21',
+  attribution: null,
+  description: 'Professor Willow asks a question.',
+  full: 'full/simulation-theory.webp',
+  thumb: 'thumbs/simulation-theory-1080.webp',
+  width: 1080,
+  height: 2156,
+  alternate: null,
+  video: 'https://example.com/sim.mp4',
+};
+
+test('workPath is a trailing-slash directory under works/', () => {
+  assert.equal(workPath('alien'), 'works/alien/');
+});
+
+test('renderWorkMeta emits a self-canonical, per-work title and og:image', () => {
+  const meta = renderWorkMeta(IMAGE, SITE);
+  assert.match(meta, /<title>"Alien: The Way of Water" · Gallery<\/title>/);
+  assert.match(
+    meta,
+    /<link rel="canonical" href="https:\/\/joeyparrish\.github\.io\/gallery\/works\/alien\/">/,
+  );
+  assert.match(
+    meta,
+    /<meta property="og:image" content="https:\/\/joeyparrish\.github\.io\/gallery\/og\/alien\.jpg">/,
+  );
+  assert.match(meta, /<meta property="og:image:width" content="1200">/);
+});
+
+test('renderWorkMeta emits single-subject JSON-LD (one ImageObject, not a gallery)', () => {
+  const meta = renderWorkMeta(IMAGE, SITE);
+  const json = meta.match(/<script type="application\/ld\+json">(.*?)<\/script>/s)[1];
+  const node = JSON.parse(json.replace(/\\u003c/g, '<'));
+  assert.equal(node['@type'], 'ImageObject');
+  assert.equal(node.name, 'Alien: The Way of Water');
+  assert.equal(node.dateCreated, '2026-04-09');
+  assert.equal(node.associatedMedia, undefined);
+});
+
+test('renderWorkMeta falls back to a generated description when none is given', () => {
+  const meta = renderWorkMeta({ ...IMAGE, description: null }, SITE);
+  assert.match(meta, /<meta name="description" content="Alien: The Way of Water, from Gallery by Joey Parrish\.">/);
+});
+
+test('renderWorkMain links assets two levels up and back to the gallery', () => {
+  const main = renderWorkMain(IMAGE);
+  assert.match(main, /<h1 class="sr-only">"Alien: The Way of Water"<\/h1>/);
+  assert.match(main, /src="\.\.\/\.\.\/full\/alien\.webp"/);
+  assert.match(main, /<a class="work-detail__back" href="\.\.\/\.\.\/">← Gallery<\/a>/);
+});
+
+test('renderWorkMain offers a plain clip link for a video work', () => {
+  const main = renderWorkMain(VIDEO);
+  assert.match(main, /href="https:\/\/example\.com\/sim\.mp4">Play video<\/a>/);
+});

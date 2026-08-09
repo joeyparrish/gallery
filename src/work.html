@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- Per-work social / search metadata: title, description, canonical, Open
+       Graph, Twitter, and a single-subject JSON-LD, all baked in by the build.
+       Assets sit two levels up (dist root), hence the ../../ prefixes below. -->
+  <!--WORK_META-->
+
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-L18P7Y992N"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+
+    // Path routing via pushState never reloads the page; app.js sends a page_view
+    // per route, so disable the automatic one to avoid double-counting.
+    gtag('config', 'G-L18P7Y992N', { send_page_view: false });
+  </script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Spectral:ital,wght@0,300;0,400;0,500;1,300;1,400&display=swap" media="print" onload="this.media='all'">
+  <noscript>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Spectral:ital,wght@0,300;0,400;0,500;1,300;1,400&display=swap">
+  </noscript>
+  <style>/*STYLE*/</style>
+</head>
+<body>
+  <!-- Standalone, single-subject view. This is the crawlable, no-JS content;
+       app.js opens the shared viewer overlay on top for interactive visitors. -->
+  <main class="work-detail"><!--WORK_MAIN--></main>
+
+  <footer class="site-footer">© 2026 Joey Parrish</footer>
+
+  <!--VIEWER-->
+
+  <!-- The full manifest, baked in so the viewer can step to neighbors and toggle
+       the alternate without a grid present and without a fetch. -->
+  <script type="application/json" id="gallery-manifest">/*MANIFEST*/</script>
+  <script src="../../app.js" type="module"></script>
+</body>
+</html>

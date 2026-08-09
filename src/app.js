@@ -1,6 +1,14 @@
-// Gallery front end: drive the hash-routed detail viewer over the works baked
-// into the page. The index grid is static HTML generated at build time; this
-// script only powers the close-up viewer and reports views to analytics.
+// Gallery front end: drive the path-routed detail viewer over the works baked
+// into the page. The index grid and each work page are static HTML generated at
+// build time; this script powers the close-up viewer, keeps the URL truthful as
+// the visitor moves between works, and reports views to analytics.
+//
+// Routing is path based: each work lives at <root>/works/<slug>/, and a work's
+// alternate rendition is the same page with a #alternate fragment. The index is
+// the full grid; a work page is a lean, single-subject page that this script
+// upgrades into the same interactive viewer.
+
+import { parseRoute, closeAction } from './routing.js';
 
 const viewer = document.getElementById('viewer');
 const viewerImg = viewer.querySelector('.viewer__img');
@@ -12,6 +20,18 @@ const viewerAlt = viewer.querySelector('[data-alt]');
 
 // Title reported to analytics for the index (no work open).
 const SITE_TITLE = document.title;
+
+// The dist root as an absolute URL, derived from this module's own URL so it is
+// correct at any page depth and under any base path (no hard-coded site path).
+// index.html loads app.js as "app.js"; a work page loads it as "../../app.js";
+// both resolve to <root>/app.js, so import.meta.url yields the same root.
+const ROOT = new URL('.', import.meta.url);
+const ROOT_PATH = ROOT.pathname;
+const INDEX_URL = ROOT.href;
+
+// The index document carries the grid; a work document does not. This tells the
+// close control whether it can hide the overlay in place or must navigate.
+const isIndexDoc = !!document.getElementById('grid');
 
 const state = {
   items: readManifest(),
@@ -34,7 +54,7 @@ function readManifest() {
 }
 
 function init() {
-  window.addEventListener('hashchange', onHashChange);
+  window.addEventListener('popstate', onPopState);
 
   viewer.querySelector('[data-close]').addEventListener('click', close);
   viewer.querySelector('[data-prev]').addEventListener('click', () => step(-1));
@@ -45,38 +65,77 @@ function init() {
   });
   document.addEventListener('keydown', onKeydown);
 
-  onHashChange(); // honor a deep link on load
+  // On the index, grid items are real links to work URLs; intercept clicks to
+  // open the viewer in place instead of loading the standalone page.
+  const grid = document.getElementById('grid');
+  if (grid) grid.addEventListener('click', onGridClick);
+
+  // Honor the current route on load: a work page opens straight into its work.
+  syncToLocation(true);
 }
 
-// ---- Detail viewer (hash-routed) ---------------------------------------
+// ---- URL helpers -------------------------------------------------------
 
-// Resolve the hash to a work and a rendition. A hash may match a work's main
-// slug or an alternate's own slug, so both are searched; the alternate makes the
-// same work reachable as a distinct deep link (#alien-poster).
-function resolveHash() {
-  const raw = decodeURIComponent(location.hash.slice(1));
-  if (!raw) return null;
-  const main = state.items.findIndex((it) => it.slug === raw);
-  if (main >= 0) return { index: main, rendition: 'main' };
-  const alt = state.items.findIndex((it) => it.alternate && it.alternate.slug === raw);
-  if (alt >= 0) return { index: alt, rendition: 'alternate' };
-  return null;
+function assetUrl(rel) {
+  return new URL(rel, ROOT).href;
 }
 
-function onHashChange() {
-  const target = resolveHash();
-  if (target) {
-    open(target.index, target.rendition);
-    trackView(state.items[target.index].title);
-  } else {
-    hide();
-    trackView(SITE_TITLE);
+function workUrl(slug) {
+  return new URL('works/' + encodeURIComponent(slug) + '/', ROOT).href;
+}
+
+function indexOfSlug(slug) {
+  return state.items.findIndex((it) => it.slug === slug);
+}
+
+// ---- Routing -----------------------------------------------------------
+
+// Open or close the viewer to match the current location. `initial` is true only
+// for the load-time call, where a work page's overlay opens over its baked-in
+// static figure.
+function syncToLocation(initial) {
+  const { slug, rendition } = parseRoute(location.pathname, location.hash, ROOT_PATH);
+  if (slug) {
+    const idx = indexOfSlug(slug);
+    if (idx >= 0) {
+      open(idx, rendition);
+      trackView(state.items[idx].title);
+      return;
+    }
   }
+  // No work in the URL (the index, or an unknown slug): show the index state.
+  hide();
+  trackView(SITE_TITLE);
 }
 
-// Report the current view to Google Analytics. Hash routing never reloads the
-// page, so the tag's automatic page_view is disabled (see index.html) and we
-// send one per route ourselves. A no-op if the tag is absent or blocked.
+function onPopState() {
+  syncToLocation(false);
+}
+
+function onGridClick(e) {
+  // Let the browser handle modified clicks (new tab/window) and non-primary buttons.
+  if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) {
+    return;
+  }
+  const a = e.target.closest('a.work');
+  if (!a) return;
+  const prefix = ROOT_PATH + 'works/';
+  const { pathname } = new URL(a.href);
+  if (!pathname.startsWith(prefix)) return;
+  const slug = decodeURIComponent(pathname.slice(prefix.length).split('/')[0]);
+  const idx = indexOfSlug(slug);
+  if (idx < 0) return;
+
+  e.preventDefault();
+  // Tag this entry so close() knows the (live) index is directly behind it.
+  history.pushState({ indexBehind: true }, '', workUrl(slug));
+  open(idx, 'main');
+  trackView(state.items[idx].title);
+}
+
+// Report the current view to Google Analytics. Path routing via pushState never
+// reloads the page, so the tag's automatic page_view is disabled (see the
+// templates) and we send one per route ourselves. A no-op if the tag is absent.
 function trackView(title) {
   if (typeof window.gtag !== 'function') return;
   window.gtag('event', 'page_view', {
@@ -84,6 +143,8 @@ function trackView(title) {
     page_title: title,
   });
 }
+
+// ---- Detail viewer -----------------------------------------------------
 
 function open(idx, rendition) {
   const item = state.items[idx];
@@ -107,14 +168,14 @@ function open(idx, rendition) {
     // Video entry: `full` is the poster still, shown until the viewer plays.
     // preload="none" (in the markup) means no clip bytes load until then. The
     // poster's dimensions size the box so the still is not letterboxed.
-    viewerVideo.poster = encodeURI(item.full);
+    viewerVideo.poster = assetUrl(item.full);
     viewerVideo.src = item.video;
     viewerVideo.style.aspectRatio = `${item.width} / ${item.height}`;
     viewerVideo.setAttribute('aria-label', label);
     viewerVideo.hidden = false;
     viewerImg.hidden = true;
   } else {
-    viewerImg.src = encodeURI(showingAlt ? item.alternate.full : item.full);
+    viewerImg.src = assetUrl(showingAlt ? item.alternate.full : item.full);
     viewerImg.alt = label;
     viewerImg.hidden = false;
     viewerVideo.hidden = true;
@@ -134,14 +195,21 @@ function open(idx, rendition) {
   viewer.querySelector('[data-close]').focus();
 }
 
-// Swap between the main rendition and the alternate by navigating the hash to
-// the other rendition's slug, which re-opens the viewer in place. Routing
-// through the hash keeps the URL truthful and the back button working.
+// Swap between the main rendition and the alternate by pushing a URL with (or
+// without) the #alternate fragment, which re-opens the viewer in place. Pushing
+// keeps the URL truthful and lets the back button undo the toggle. It does not
+// carry the indexBehind tag, so close() still lands on the index rather than
+// merely undoing the toggle.
 function toggleRendition() {
   if (state.current === -1) return;
   const item = state.items[state.current];
   if (!item.alternate) return;
-  location.hash = state.rendition === 'main' ? item.alternate.slug : item.slug;
+  const goingAlt = state.rendition === 'main';
+  const url = new URL(location.href);
+  url.hash = goingAlt ? 'alternate' : '';
+  history.pushState({}, '', url.href);
+  open(state.current, goingAlt ? 'alternate' : 'main');
+  trackView(item.title);
 }
 
 // Stop and detach whichever medium was showing, so a clip never keeps playing
@@ -167,24 +235,37 @@ function hide() {
   state.lastFocus = null;
 }
 
-// Close by stripping the hash without leaving a trailing '#'; hide directly
-// since replaceState does not emit a hashchange.
+// Close returns the visitor to the index. How depends on how they arrived
+// (see closeAction): pop back to a live index entry, hide the overlay over the
+// live grid, or navigate for real from a cold-loaded work page.
 function close() {
-  const wasOpen = state.current !== -1;
-  if (location.hash) {
-    history.replaceState(null, '', location.pathname + location.search);
+  const action = closeAction(isIndexDoc, !!(history.state && history.state.indexBehind));
+  if (action === 'navigate') {
+    location.assign(INDEX_URL);
+    return;
+  }
+  if (action === 'back') {
+    history.back(); // onPopState hides the overlay and records the index view
+    return;
+  }
+  if (location.href !== INDEX_URL) {
+    history.pushState({}, '', INDEX_URL);
   }
   hide();
-  // replaceState fires no hashchange, so record the return to the index here.
-  if (wasOpen) trackView(SITE_TITLE);
+  trackView(SITE_TITLE);
 }
 
-// Move to a neighbor (wrapping) by navigating the hash, which re-opens.
+// Move to a neighbor (wrapping). Replace rather than push so the history depth
+// stays flat while stepping and close() still returns straight to the index;
+// preserve the indexBehind tag so that remains true after stepping.
 function step(delta) {
   if (state.current === -1) return;
   const count = state.items.length;
   const nextIdx = (state.current + delta + count) % count;
-  location.hash = state.items[nextIdx].slug;
+  const carry = { indexBehind: !!(history.state && history.state.indexBehind) };
+  history.replaceState(carry, '', workUrl(state.items[nextIdx].slug));
+  open(nextIdx, 'main');
+  trackView(state.items[nextIdx].title);
 }
 
 function onKeydown(e) {

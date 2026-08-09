@@ -10,12 +10,15 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import yaml from 'js-yaml';
-import { transform } from 'esbuild';
+import { transform, build as esbuildBundle } from 'esbuild';
 
 import { parseManifest, formatDate, slugify } from './manifest.js';
 import { renderWebp, renderWidth, renderJpeg } from './thumbnails.js';
 import { renderGrid } from './grid.js';
 import { renderJsonLd } from './jsonld.js';
+import { renderOgCard, backgroundSize } from './og.js';
+import { renderSitemap, renderRobots } from './sitemap.js';
+import { renderWorkMeta, renderWorkMain, workPath } from './pages.js';
 
 const ROOT = path.resolve(import.meta.dirname, '..');
 const IMAGES_DIR = path.join(ROOT, 'images');
@@ -36,6 +39,11 @@ const FULL = { maxEdge: 2560, quality: 90 };
 // appropriately sized image instead of one oversized thumbnail.
 const THUMB_WIDTHS = [480, 768, 1152, 1600];
 const THUMB_QUALITY = 82;
+
+// Per-work social cards: the work fit-composited onto src/og-background.webp.
+// `inset` is the fraction of the 1200x630 card the work may occupy; the rest is
+// visible wall. Tune to taste after eyeing the first build.
+const OG = { inset: 0.62, quality: 85 };
 
 // Canonical site identity, used for the absolute URLs in the JSON-LD (and the
 // og:url / canonical link baked into index.html).
@@ -95,6 +103,8 @@ async function build() {
   await fs.rm(DIST_DIR, { recursive: true, force: true });
   await fs.mkdir(path.join(DIST_DIR, 'full'), { recursive: true });
   await fs.mkdir(path.join(DIST_DIR, 'thumbs'), { recursive: true });
+  await fs.mkdir(path.join(DIST_DIR, 'og'), { recursive: true });
+  await fs.mkdir(path.join(DIST_DIR, 'works'), { recursive: true });
 
   // Static shell.
   for (const name of STATIC_FILES) {
@@ -111,6 +121,17 @@ async function build() {
     console.warn(`Warning: src/hero.webp is ${og.width}x${og.height}; social cards expect 1200x630.`);
   }
 
+  // Background for the per-work social cards. It is cover-resized to 1200x630 when
+  // composited (a safety net), but warn if it is not authored at that size.
+  const ogBg = path.join(SRC_DIR, 'og-background.webp');
+  if (!(await fileExists(ogBg))) {
+    throw new Error('src/og-background.webp not found; it is the base for per-work social cards.');
+  }
+  const bg = await backgroundSize(ogBg);
+  if (bg.width !== 1200 || bg.height !== 630) {
+    console.warn(`Warning: src/og-background.webp is ${bg.width}x${bg.height}; social cards expect 1200x630.`);
+  }
+
   const manifest = [];
 
   // Generated filenames now come from the source stem, so two works whose source
@@ -125,6 +146,19 @@ async function build() {
     }
     usedNames.add(base);
     return base;
+  };
+
+  // A work's slug now names its page directory and social card, so two works
+  // whose titles slugify the same would overwrite each other. Fail loudly.
+  const usedSlugs = new Set();
+  const claimSlug = (slug, index, title) => {
+    if (usedSlugs.has(slug)) {
+      throw new Error(
+        `gallery.yaml entry ${index} ("${title}"): title slug "${slug}" collides with another work; give one a distinct title.`,
+      );
+    }
+    usedSlugs.add(slug);
+    return slug;
   };
 
   for (let i = 0; i < entries.length; i++) {
@@ -156,9 +190,9 @@ async function build() {
     const thumb = `thumbs/${base}-${width}.webp`; // largest, used as the fallback src
 
     // Optional alternate rendition: same work, shown a different way. It only
-    // ever appears in the close-up viewer, so we render a full-size WebP but no
-    // thumbnail. Its slug comes from the alternate filename stem, making it an
-    // independent deep-link target (#alien-poster).
+    // ever appears in the close-up viewer as a toggle (the #alternate fragment on
+    // the work's own page), so we render a full-size WebP but no thumbnail, and it
+    // needs no slug of its own.
     let alternate = null;
     if (entry.alternate) {
       const altSource = path.join(IMAGES_DIR, entry.alternate);
@@ -169,15 +203,17 @@ async function build() {
       }
       const altName = `${claimName(assetBase(entry.alternate), index, entry.title)}.webp`;
       await renderWebp(altSource, path.join(DIST_DIR, 'full', altName), FULL);
-      alternate = {
-        slug: slugify(entry.alternate.replace(/\.[^.]+$/, '')) || `work-${index}-alternate`,
-        full: `full/${altName}`,
-      };
+      alternate = { full: `full/${altName}` };
     }
+
+    // Per-work social card: the work (its poster still, for a video) composited
+    // onto the shared background.
+    const slug = claimSlug(slugify(entry.title) || `work-${index}`, index, entry.title);
+    await renderOgCard(ogBg, source, path.join(DIST_DIR, 'og', `${slug}.jpg`), OG);
 
     manifest.push({
       index,
-      slug: slugify(entry.title) || `work-${index}`,
+      slug,
       title: entry.title,
       date: formatDate(entry.date),
       attribution: entry.attribution,
@@ -195,19 +231,22 @@ async function build() {
     });
   }
 
-  // Bake three things into index.html: the visible grid, the inlined manifest
-  // JSON the viewer reads, and the JSON-LD that describes each work for search
-  // engines. Both JSON blocks escape "<" so they cannot end their <script> early.
-  const template = await fs.readFile(path.join(SRC_DIR, 'index.html'), 'utf8');
+  // Shared pieces baked into both the index and each work page: the inlined
+  // manifest JSON the viewer reads, the minified CSS, and the viewer overlay.
+  // JSON blocks escape "<" so they cannot end their <script> early.
+  const inlineManifest = JSON.stringify(manifest).replace(/</g, '\\u003c');
   const css = await fs.readFile(path.join(SRC_DIR, 'style.css'), 'utf8');
-  const appJs = await fs.readFile(path.join(SRC_DIR, 'app.js'), 'utf8');
-  for (const marker of ['<!--WORKS-->', '/*MANIFEST*/', '/*JSONLD*/', '/*STYLE*/']) {
+  const minCss = (await transform(css, { loader: 'css', minify: true })).code.trim();
+  const viewer = await fs.readFile(path.join(SRC_DIR, 'viewer.html'), 'utf8');
+
+  // Bake into index.html: the visible grid, the manifest, the JSON-LD gallery
+  // graph for search engines, the viewer overlay, and the styles.
+  const template = await fs.readFile(path.join(SRC_DIR, 'index.html'), 'utf8');
+  for (const marker of ['<!--WORKS-->', '<!--VIEWER-->', '/*MANIFEST*/', '/*JSONLD*/', '/*STYLE*/']) {
     if (!template.includes(marker)) {
       throw new Error(`src/index.html is missing the ${marker} placeholder`);
     }
   }
-  const grid = renderGrid(manifest);
-  const inlineManifest = JSON.stringify(manifest).replace(/</g, '\\u003c');
   // The JSON-LD needs the raw ISO date and the description, which the manifest
   // does not carry, so pair each work with its parsed entry.
   const seoItems = manifest.map((m, i) => ({
@@ -219,17 +258,51 @@ async function build() {
     video: m.video,
   }));
   const jsonLd = renderJsonLd(seoItems, SITE).replace(/</g, '\\u003c');
-  const minCss = (await transform(css, { loader: 'css', minify: true })).code.trim();
   const html = template
-    .replace('<!--WORKS-->', () => grid)
+    .replace('<!--WORKS-->', () => renderGrid(manifest))
+    .replace('<!--VIEWER-->', () => viewer)
     .replace('/*MANIFEST*/', () => inlineManifest)
     .replace('/*JSONLD*/', () => jsonLd)
     .replace('/*STYLE*/', () => minCss);
   await fs.writeFile(path.join(DIST_DIR, 'index.html'), html);
 
-  // Minify app.js into dist/ rather than copying it verbatim.
-  const minJs = (await transform(appJs, { loader: 'js', minify: true })).code;
-  await fs.writeFile(path.join(DIST_DIR, 'app.js'), minJs);
+  // One lean, single-subject page per work at works/<slug>/index.html. It shares
+  // the manifest, styles, and viewer with the index but carries per-work head
+  // metadata and only its own work in the body.
+  const workTemplate = await fs.readFile(path.join(SRC_DIR, 'work.html'), 'utf8');
+  for (const marker of ['<!--WORK_META-->', '<!--WORK_MAIN-->', '<!--VIEWER-->', '/*MANIFEST*/', '/*STYLE*/']) {
+    if (!workTemplate.includes(marker)) {
+      throw new Error(`src/work.html is missing the ${marker} placeholder`);
+    }
+  }
+  for (let i = 0; i < manifest.length; i++) {
+    const item = manifest[i];
+    const metaItem = { ...item, rawDate: entries[i].date };
+    const workHtml = workTemplate
+      .replace('<!--WORK_META-->', () => renderWorkMeta(metaItem, SITE))
+      .replace('<!--WORK_MAIN-->', () => renderWorkMain(item))
+      .replace('<!--VIEWER-->', () => viewer)
+      .replace('/*MANIFEST*/', () => inlineManifest)
+      .replace('/*STYLE*/', () => minCss);
+    const dir = path.join(DIST_DIR, 'works', item.slug);
+    await fs.mkdir(dir, { recursive: true });
+    await fs.writeFile(path.join(dir, 'index.html'), workHtml);
+  }
+
+  // Sitemap + robots: list the index and every work URL for crawlers.
+  const paths = ['', ...manifest.map((m) => workPath(m.slug))];
+  await fs.writeFile(path.join(DIST_DIR, 'sitemap.xml'), renderSitemap(SITE.baseUrl, paths));
+  await fs.writeFile(path.join(DIST_DIR, 'robots.txt'), renderRobots(SITE.baseUrl));
+
+  // Bundle app.js (it imports routing.js) and minify into dist/.
+  const appBundle = await esbuildBundle({
+    entryPoints: [path.join(SRC_DIR, 'app.js')],
+    bundle: true,
+    format: 'esm',
+    minify: true,
+    write: false,
+  });
+  await fs.writeFile(path.join(DIST_DIR, 'app.js'), appBundle.outputFiles[0].text);
 
   console.log(`Built ${manifest.length} entries -> dist/`);
 }

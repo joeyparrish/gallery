@@ -42,7 +42,7 @@ test('renderGrid emits a figure per work with baked layout vars and alt', () => 
   assert.equal((html.match(/<a class="work"/g) || []).length, 2);
   assert.equal((html.match(/<figure class="work__figure"/g) || []).length, 2);
   assert.equal((html.match(/<figcaption/g) || []).length, 2);
-  assert.match(html, /href="#a"/);
+  assert.match(html, /href="works\/a\/"/);
   assert.match(html, /--wf:/);
   assert.match(html, /--ar:/);
   assert.match(html, /--align:/);

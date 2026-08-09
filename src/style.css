@@ -232,6 +232,37 @@ body > * {
   text-align: center;
 }
 
+/* ---- Standalone work page (no-JS content) ----------------------------- */
+
+/* A work's own page renders the work as centered content for crawlers and
+   no-JS visitors. It reuses the viewer's figure/caption styling (.viewer__*);
+   only the page wrapper and the back link are specific to this view. With
+   JavaScript, app.js opens the .viewer overlay on top of this. */
+.work-detail {
+  min-height: 100svh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(20px, 3vw, 34px);
+  padding: clamp(20px, 5vw, 64px);
+}
+
+.work-detail__back {
+  font-family: 'IBM Plex Mono', ui-monospace, monospace;
+  font-size: 0.72rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  text-decoration: none;
+  color: var(--muted);
+  transition: color 160ms var(--ease);
+}
+
+.work-detail__back:hover,
+.work-detail__back:focus-visible {
+  color: var(--paper);
+}
+
 /* ---- Detail viewer ---------------------------------------------------- */
 
 .viewer {
