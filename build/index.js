@@ -40,10 +40,9 @@ const FULL = { maxEdge: 2560, quality: 90 };
 const THUMB_WIDTHS = [480, 768, 1152, 1600];
 const THUMB_QUALITY = 82;
 
-// Per-work social cards: the work fit-composited onto src/og-background.webp.
-// `inset` is the fraction of the 1200x630 card the work may occupy; the rest is
-// visible wall. Tune to taste after eyeing the first build.
-const OG = { inset: 0.62, quality: 85 };
+// Per-work social cards: the work composited onto src/og-background.webp, fit
+// inside the 1200x630 card less a `minMargin` frame on every side.
+const OG = { minMargin: 50, quality: 85 };
 
 // Canonical site identity, used for the absolute URLs in the JSON-LD (and the
 // og:url / canonical link baked into index.html).

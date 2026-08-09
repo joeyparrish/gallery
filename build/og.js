@@ -17,16 +17,27 @@ export async function backgroundSize(bgPath) {
   return { width: meta.width, height: meta.height };
 }
 
-// Composite `workPath` fit-centered onto `bgPath` and write a 1200x630 JPEG to
-// `outPath`. `inset` is the fraction of the card the work may occupy (the rest
-// is visible wall); tune it to taste. Returns the output dimensions.
-export async function renderOgCard(bgPath, workPath, outPath, { inset, quality }) {
-  const boxW = Math.round(CARD_W * inset);
-  const boxH = Math.round(CARD_H * inset);
+// The content box (in card pixels) a work of the given source dimensions should
+// occupy: the work fit (aspect preserved, never enlarged) inside the card less a
+// `minMargin` frame on every side. Pure, so it can be tested and inspected
+// without rendering. A work touches the margin on its binding axis and leaves a
+// wider margin on the other, so wide works sit shorter and tall works narrower.
+export function contentBox({ width, height }, { minMargin }) {
+  const maxW = CARD_W - 2 * minMargin;
+  const maxH = CARD_H - 2 * minMargin;
+  const scale = Math.min(maxW / width, maxH / height, 1);
+  return { width: Math.round(width * scale), height: Math.round(height * scale) };
+}
 
-  // Resize the work to fit within the centered content box (never enlarged).
+// Composite `workPath` fit-centered onto `bgPath` and write a 1200x630 JPEG to
+// `outPath`, sizing the work with contentBox() above. Returns the output size.
+export async function renderOgCard(bgPath, workPath, outPath, { minMargin, quality }) {
+  const meta = await sharp(workPath).metadata();
+  const box = contentBox(meta, { minMargin });
+
+  // Resize the work to fit the box (never enlarged past its source pixels).
   const work = await sharp(workPath)
-    .resize({ width: boxW, height: boxH, fit: 'inside', withoutEnlargement: true })
+    .resize({ width: box.width, height: box.height, fit: 'inside', withoutEnlargement: true })
     .toBuffer();
 
   // Cover-resize the background to exactly 1200x630 as a safety net, then lay the
