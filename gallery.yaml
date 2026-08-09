@@ -11,6 +11,14 @@
   attribution: Gemini 3.1 Pro + Nano Banana, 5 rounds of prompting, image compositing
 
 
+- file: air-buds.webp
+  title: Air Buds
+  description: |
+    A blonde woman in an elegant high-rise apartment with a tiny golden retriever butt sticking out of her ear.  An advertisement for Air Buds: There's no rule that says a dog can't play high-fidelity audio.
+  date: 2026-08-09
+  attribution: Gemini 3.1 Pro + Nano Banana, 4 rounds of prompting, edited and text added in GIMP
+
+
 - file: alien.webp
   alternate: alien-poster.webp
   title: "Alien: The Way of Water"
