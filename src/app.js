@@ -97,6 +97,43 @@ function indexOfSlug(slug) {
   return state.items.findIndex((it) => it.slug === slug);
 }
 
+// ---- Neighbor preloading -----------------------------------------------
+
+// Images already asked for, and a hold on the Image objects so the browser does
+// not collect them before the responses are cached.
+const preloaded = new Set();
+const preloadHold = [];
+
+function preload(url) {
+  if (!url || preloaded.has(url)) return;
+  preloaded.add(url);
+  const img = new Image();
+  img.decoding = 'async';
+  img.src = url;
+  preloadHold.push(img);
+}
+
+// Warm the images the viewer is most likely to show next: the neighbors (which
+// step to) and, for a work with an alternate, whichever rendition is not on
+// screen (which the toggle swaps to). A neighbor that is a video contributes its
+// poster still (`full`); clips themselves are never preloaded.
+function preloadNeighbors(idx, rendition) {
+  const n = state.items.length;
+  if (n === 0) return;
+  const cur = state.items[idx];
+  preload(assetUrl(state.items[(idx + 1) % n].full));
+  preload(assetUrl(state.items[(idx - 1 + n) % n].full));
+  if (cur.alternate) {
+    preload(assetUrl(rendition === 'main' ? cur.alternate.full : cur.full));
+  }
+}
+
+// Run `cb` once the image has pixels: immediately if already cached, else on load.
+function whenLoaded(img, cb) {
+  if (img.complete && img.naturalWidth > 0) cb();
+  else img.addEventListener('load', cb, { once: true });
+}
+
 // ---- Routing -----------------------------------------------------------
 
 // Open or close the viewer to match the current location. `initial` is true only
@@ -207,6 +244,12 @@ function open(idx, rendition) {
   viewer.hidden = false;
   document.body.classList.add('viewer-open');
   viewer.querySelector('[data-close]').focus();
+
+  // Once the focused media is ready, warm the neighbors so stepping and toggling
+  // are instant, without competing with the focused image's own load. A video's
+  // poster has no load event to wait on and is cheap, so warm immediately.
+  if (item.video) preloadNeighbors(idx, rendition);
+  else whenLoaded(viewerImg, () => preloadNeighbors(idx, rendition));
 }
 
 // Swap between the main rendition and the alternate by pushing a URL with (or
