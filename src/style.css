@@ -263,6 +263,12 @@ body > * {
   color: var(--paper);
 }
 
+/* Once the viewer overlay opens, hide the baked static figure so it does not
+   show through the scrim; only the wall should sit behind the viewer. */
+body.viewer-open .work-detail {
+  display: none;
+}
+
 /* ---- Detail viewer ---------------------------------------------------- */
 
 .viewer {
