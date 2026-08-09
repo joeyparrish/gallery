@@ -1,6 +1,6 @@
 // Build-time rendering of standalone work pages.
 //
-// Each work is served from its own directory (works/<slug>/index.html) with a
+// Each work is served from its own directory (<slug>/index.html) with a
 // lean, single-subject body and fully per-work head metadata. This module builds
 // the two variable pieces the work template needs: the head metadata block
 // (<!--WORK_META-->) and the main content (<!--WORK_MAIN-->). Both are pure
@@ -9,13 +9,18 @@
 import { esc } from './grid.js';
 import { renderWorkJsonLd } from './jsonld.js';
 
-// Assets live at the dist root; a work page is two levels below it.
-export const ASSET_PREFIX = '../../';
+// Assets live at the dist root; a work page is one level below it.
+export const ASSET_PREFIX = '../';
+
+// Output directories that sit at the dist root beside the work pages. Since each
+// work becomes a root-level directory (works/<slug>/ was flattened to <slug>/), a
+// work's slug must not collide with one of these; the build asserts it.
+export const RESERVED_SLUGS = new Set(['og', 'full', 'thumbs']);
 
 // The relative path (from the dist root) of a work's directory. Also the URL
 // path a visitor sees, and the sitemap entry.
 export function workPath(slug) {
-  return `works/${slug}/`;
+  return `${slug}/`;
 }
 
 // The per-work <head> block: title, description, canonical, Open Graph, Twitter,

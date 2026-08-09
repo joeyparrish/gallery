@@ -61,8 +61,8 @@ export function esc(s) {
 // Render one work as a static anchor wrapping a figure. `--wf`, `--ar`, and
 // `--align` are read by the CSS to size and place it; the image carries a real
 // src so the work is visible without JavaScript. The href is the work's own page
-// (works/<slug>/); app.js intercepts the click to open the viewer in place, but
-// with no JavaScript the link loads that standalone page. `alt` describes the
+// (<slug>/); app.js intercepts the click to open the viewer in place, but with
+// no JavaScript the link loads that standalone page. `alt` describes the
 // image (the work's description when it has one, else its title), while the title
 // lives in the figcaption, so the two are associated rather than duplicated.
 function renderWork(item, ar, wf, align, eager) {
@@ -74,7 +74,7 @@ function renderWork(item, ar, wf, align, eager) {
   // The first work is the likely LCP element: load it eagerly at high priority
   // rather than lazily, so it is not deprioritized behind the rest of the grid.
   const priority = eager ? 'fetchpriority="high"' : 'loading="lazy"';
-  return `    <a class="work" href="works/${item.slug}/" style="--wf:${num(wf)};--ar:${num(ar)};--align:${align}">
+  return `    <a class="work" href="${item.slug}/" style="--wf:${num(wf)};--ar:${num(ar)};--align:${align}">
       <figure class="work__figure">
         <div class="work__frame">
           <img class="work__img" src="${encodeURI(item.thumb)}"

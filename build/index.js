@@ -18,7 +18,7 @@ import { renderGrid } from './grid.js';
 import { renderJsonLd } from './jsonld.js';
 import { renderOgCard, backgroundSize } from './og.js';
 import { renderSitemap, renderRobots } from './sitemap.js';
-import { renderWorkMeta, renderWorkMain, workPath } from './pages.js';
+import { renderWorkMeta, renderWorkMain, workPath, RESERVED_SLUGS } from './pages.js';
 
 const ROOT = path.resolve(import.meta.dirname, '..');
 const IMAGES_DIR = path.join(ROOT, 'images');
@@ -103,7 +103,6 @@ async function build() {
   await fs.mkdir(path.join(DIST_DIR, 'full'), { recursive: true });
   await fs.mkdir(path.join(DIST_DIR, 'thumbs'), { recursive: true });
   await fs.mkdir(path.join(DIST_DIR, 'og'), { recursive: true });
-  await fs.mkdir(path.join(DIST_DIR, 'works'), { recursive: true });
 
   // Static shell.
   for (const name of STATIC_FILES) {
@@ -147,10 +146,16 @@ async function build() {
     return base;
   };
 
-  // A work's slug now names its page directory and social card, so two works
-  // whose titles slugify the same would overwrite each other. Fail loudly.
+  // A work's slug now names its top-level page directory and its social card, so
+  // it must be unique and must not collide with a sibling output directory
+  // (og/, full/, thumbs/). Fail loudly on either.
   const usedSlugs = new Set();
   const claimSlug = (slug, index, title) => {
+    if (RESERVED_SLUGS.has(slug)) {
+      throw new Error(
+        `gallery.yaml entry ${index} ("${title}"): title slug "${slug}" collides with a reserved output directory (${[...RESERVED_SLUGS].join(', ')}); give it a distinct title.`,
+      );
+    }
     if (usedSlugs.has(slug)) {
       throw new Error(
         `gallery.yaml entry ${index} ("${title}"): title slug "${slug}" collides with another work; give one a distinct title.`,
@@ -265,8 +270,8 @@ async function build() {
     .replace('/*STYLE*/', () => minCss);
   await fs.writeFile(path.join(DIST_DIR, 'index.html'), html);
 
-  // One lean, single-subject page per work at works/<slug>/index.html. It shares
-  // the manifest, styles, and viewer with the index but carries per-work head
+  // One lean, single-subject page per work at <slug>/index.html. It shares the
+  // manifest, styles, and viewer with the index but carries per-work head
   // metadata and only its own work in the body.
   const workTemplate = await fs.readFile(path.join(SRC_DIR, 'work.html'), 'utf8');
   for (const marker of ['<!--WORK_META-->', '<!--WORK_MAIN-->', '<!--VIEWER-->', '/*MANIFEST*/', '/*STYLE*/']) {
@@ -283,7 +288,7 @@ async function build() {
       .replace('<!--VIEWER-->', () => viewer)
       .replace('/*MANIFEST*/', () => inlineManifest)
       .replace('/*STYLE*/', () => minCss);
-    const dir = path.join(DIST_DIR, 'works', item.slug);
+    const dir = path.join(DIST_DIR, item.slug);
     await fs.mkdir(dir, { recursive: true });
     await fs.writeFile(path.join(dir, 'index.html'), workHtml);
   }

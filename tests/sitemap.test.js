@@ -6,15 +6,15 @@ import { renderSitemap, renderRobots } from '../build/sitemap.js';
 const BASE = 'https://joeyparrish.github.io/gallery/';
 
 test('renderSitemap resolves each path to an absolute loc', () => {
-  const xml = renderSitemap(BASE, ['', 'works/alien/']);
+  const xml = renderSitemap(BASE, ['', 'alien/']);
   assert.match(xml, /^<\?xml version="1\.0" encoding="UTF-8"\?>/);
   assert.match(xml, /<urlset xmlns="http:\/\/www\.sitemaps\.org\/schemas\/sitemap\/0\.9">/);
   assert.match(xml, /<loc>https:\/\/joeyparrish\.github\.io\/gallery\/<\/loc>/);
-  assert.match(xml, /<loc>https:\/\/joeyparrish\.github\.io\/gallery\/works\/alien\/<\/loc>/);
+  assert.match(xml, /<loc>https:\/\/joeyparrish\.github\.io\/gallery\/alien\/<\/loc>/);
 });
 
 test('renderSitemap emits one url element per path', () => {
-  const xml = renderSitemap(BASE, ['', 'works/a/', 'works/b/']);
+  const xml = renderSitemap(BASE, ['', 'a/', 'b/']);
   assert.equal((xml.match(/<url>/g) || []).length, 3);
 });
 

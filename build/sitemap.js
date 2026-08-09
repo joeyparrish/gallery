@@ -13,7 +13,7 @@ function xmlEscape(s) {
 }
 
 // Render sitemap.xml. `paths` are relative to `baseUrl` (e.g. '' for the index,
-// 'works/alien/' for a work); each is resolved to an absolute <loc>.
+// 'alien/' for a work); each is resolved to an absolute <loc>.
 export function renderSitemap(baseUrl, paths) {
   const urls = paths
     .map((p) => `  <url><loc>${xmlEscape(new URL(p, baseUrl).href)}</loc></url>`)

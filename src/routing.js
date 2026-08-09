@@ -3,16 +3,18 @@
 // app.js bundles these in and supplies the live location/history values.
 
 // Resolve a location into the work it addresses and which rendition to show.
-//   <root>/                     -> { slug: null,   rendition: 'main' }      (index)
-//   <root>/works/alien/         -> { slug: 'alien', rendition: 'main' }
-//   <root>/works/alien/#alternate -> { slug: 'alien', rendition: 'alternate' }
+// A work is the first path segment below the root; the root itself (or its
+// index.html) is the gallery index.
+//   <root>/                  -> { slug: null,   rendition: 'main' }      (index)
+//   <root>/index.html        -> { slug: null,   rendition: 'main' }      (index)
+//   <root>/alien/            -> { slug: 'alien', rendition: 'main' }
+//   <root>/alien/#alternate  -> { slug: 'alien', rendition: 'alternate' }
 // `rootPath` is the site's base path with a trailing slash (e.g. "/gallery/").
 export function parseRoute(pathname, hash, rootPath) {
-  const prefix = rootPath + 'works/';
   let slug = null;
-  if (pathname.startsWith(prefix)) {
-    const seg = pathname.slice(prefix.length).split('/')[0];
-    if (seg) slug = decodeURIComponent(seg);
+  if (pathname.startsWith(rootPath)) {
+    const seg = pathname.slice(rootPath.length).split('/')[0];
+    if (seg && seg !== 'index.html') slug = decodeURIComponent(seg);
   }
   const rendition = hash === '#alternate' ? 'alternate' : 'main';
   return { slug, rendition };

@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
-import { workPath, renderWorkMeta, renderWorkMain } from '../build/pages.js';
+import { workPath, renderWorkMeta, renderWorkMain, RESERVED_SLUGS } from '../build/pages.js';
 
 const SITE = {
   baseUrl: 'https://joeyparrish.github.io/gallery/',
@@ -42,8 +42,14 @@ const VIDEO = {
   video: 'https://example.com/sim.mp4',
 };
 
-test('workPath is a trailing-slash directory under works/', () => {
-  assert.equal(workPath('alien'), 'works/alien/');
+test('workPath is a trailing-slash directory at the root (no works/ prefix)', () => {
+  assert.equal(workPath('alien'), 'alien/');
+});
+
+test('RESERVED_SLUGS covers the sibling output directories', () => {
+  assert.ok(RESERVED_SLUGS.has('og'));
+  assert.ok(RESERVED_SLUGS.has('full'));
+  assert.ok(RESERVED_SLUGS.has('thumbs'));
 });
 
 test('renderWorkMeta emits a self-canonical, per-work title and og:image', () => {
@@ -51,7 +57,7 @@ test('renderWorkMeta emits a self-canonical, per-work title and og:image', () =>
   assert.match(meta, /<title>"Alien: The Way of Water" · Gallery<\/title>/);
   assert.match(
     meta,
-    /<link rel="canonical" href="https:\/\/joeyparrish\.github\.io\/gallery\/works\/alien\/">/,
+    /<link rel="canonical" href="https:\/\/joeyparrish\.github\.io\/gallery\/alien\/">/,
   );
   assert.match(
     meta,
@@ -75,11 +81,11 @@ test('renderWorkMeta falls back to a generated description when none is given', 
   assert.match(meta, /<meta name="description" content="Alien: The Way of Water, from Gallery by Joey Parrish\.">/);
 });
 
-test('renderWorkMain links assets two levels up and back to the gallery', () => {
+test('renderWorkMain links assets one level up and back to the gallery', () => {
   const main = renderWorkMain(IMAGE);
   assert.match(main, /<h1 class="sr-only">"Alien: The Way of Water"<\/h1>/);
-  assert.match(main, /src="\.\.\/\.\.\/full\/alien\.webp"/);
-  assert.match(main, /<a class="work-detail__back" href="\.\.\/\.\.\/">← Gallery<\/a>/);
+  assert.match(main, /src="\.\.\/full\/alien\.webp"/);
+  assert.match(main, /<a class="work-detail__back" href="\.\.\/">← Gallery<\/a>/);
 });
 
 test('renderWorkMain offers a plain clip link for a video work', () => {

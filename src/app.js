@@ -3,7 +3,7 @@
 // build time; this script powers the close-up viewer, keeps the URL truthful as
 // the visitor moves between works, and reports views to analytics.
 //
-// Routing is path based: each work lives at <root>/works/<slug>/, and a work's
+// Routing is path based: each work lives at <root>/<slug>/, and a work's
 // alternate rendition is the same page with a #alternate fragment. The index is
 // the full grid; a work page is a lean, single-subject page that this script
 // upgrades into the same interactive viewer.
@@ -90,7 +90,7 @@ function assetUrl(rel) {
 }
 
 function workUrl(slug) {
-  return new URL('works/' + encodeURIComponent(slug) + '/', ROOT).href;
+  return new URL(encodeURIComponent(slug) + '/', ROOT).href;
 }
 
 function indexOfSlug(slug) {
@@ -165,10 +165,8 @@ function onGridClick(e) {
   }
   const a = e.target.closest('a.work');
   if (!a) return;
-  const prefix = ROOT_PATH + 'works/';
-  const { pathname } = new URL(a.href);
-  if (!pathname.startsWith(prefix)) return;
-  const slug = decodeURIComponent(pathname.slice(prefix.length).split('/')[0]);
+  const { slug } = parseRoute(new URL(a.href).pathname, '', ROOT_PATH);
+  if (!slug) return;
   const idx = indexOfSlug(slug);
   if (idx < 0) return;
 
