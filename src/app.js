@@ -49,8 +49,6 @@ const state = {
   lastFocus: null,
 };
 
-init();
-
 // The manifest is baked into the page as a JSON script element, so the viewer
 // has its data with no fetch and no failure path.
 function readManifest() {
@@ -332,3 +330,8 @@ function onKeydown(e) {
   else if (e.key === 'ArrowLeft') step(-1);
   else if (e.key === 'ArrowRight') step(1);
 }
+
+// Kick off last, once every module-level binding above (including the preload
+// state) is initialized: on a work page, init() can synchronously open the
+// viewer over an already-cached image and reach preload() during evaluation.
+init();
