@@ -52,7 +52,7 @@
   a11y-text: 'Dwayne "The Rock" Johnson in a hay-filled barn, covered in a swarm of rabbits.  His terror is palpable.'
   social-text: They're back!
   date: 2026-05-07
-  attribution: Gemini 3.1 Pro + Nano Banana, perfect the first time
+  attribution: Gemini 3.1 Pro + Nano Banana
 
 - file: dwaynes-jelly.webp
   title: Dwayne's Jelly
@@ -60,6 +60,13 @@
   social-text: The police are very much sick of responding to this particular call.
   date: 2026-05-03
   attribution: Gemini 3.1 Pro + Nano Banana, 3 rounds of prompting
+
+- file: two-best-friends.webp
+  title: Two Best Friends
+  a11y-text: 'Dwayne "The Rock" Johnson, dressed as Glinda, and Danny DeVito, dressed as Elphaba, enter the Emerald City, cheered on by a crowd of people in green costumes.  Their joy and togetherness is deeply infectious.'
+  social-text: The Wizard will see you now!
+  date: 2026-08-08
+  attribution: Gemini 3.1 Pro + Nano Banana
 
 
 # Pokémon
